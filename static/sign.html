@@ -1,0 +1,38 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="referrer" content="no-referrer">
+<title>交通事故和解書簽署</title>
+<link rel="stylesheet" href="/signing.css">
+<script src="/signing-page.js" defer></script>
+</head>
+<body><main data-page="signer">
+<h1 id="title">交通事故和解書簽署</h1>
+<section id="verify" hidden>
+<p>請驗證受邀信箱。驗證代表你能存取該信箱。</p>
+<button id="send" type="button">寄出驗證碼</button>
+<form id="codeForm" class="actions">
+<label for="code">8 位數驗證碼</label>
+<input id="code" type="text" inputmode="numeric" autocomplete="one-time-code" pattern="[0-9]{8}" required>
+<button type="submit">驗證信箱</button>
+</form>
+</section>
+<section id="document" hidden>
+<p><a id="openPdf" target="_blank" rel="noopener">在新分頁開啟完整和解書 PDF</a></p>
+<iframe id="pdfFrame" title="完整和解書 PDF"></iframe>
+<p id="fingerprint" class="fingerprint"></p>
+<form id="signatureForm">
+<p><label><input id="confirmed" type="checkbox" required> 我已閱讀並同意這一版和解書，並確認送出我的簽名。</label></p>
+<h2>手寫簽名</h2>
+<canvas id="pad" aria-label="手寫簽名區"></canvas>
+<div class="actions">
+<button class="secondary" id="clear" type="button">重寫</button>
+<button type="submit">送出簽名</button>
+</div>
+</form>
+</section>
+<p id="status" role="status" tabindex="-1"></p>
+</main></body></html>
+

@@ -1,0 +1,19 @@
+*{box-sizing:border-box}
+body{margin:0;background:#eef3f7;color:#172b3e;font:16px/1.6 system-ui,sans-serif}
+main{max-width:850px;margin:4vh auto;padding:clamp(16px,4vw,36px);background:#fff;border:1px solid #d7e0e8;border-radius:14px}
+[hidden]{display:none!important}
+h1{font-size:clamp(24px,4vw,32px);line-height:1.25}
+h2{font-size:20px}
+button,input{font:inherit}
+button{background:#164eb4;color:white;border:1px solid #164eb4;border-radius:7px;padding:.5rem .9rem;cursor:pointer}
+button.secondary{background:white;color:#164eb4}
+button:disabled{opacity:.55;cursor:default}
+a{color:#164eb4}
+input[type=text]{padding:.45rem;border:1px solid #8093a8;border-radius:6px;width:10rem}
+#status{color:#334c62}
+#status.error{color:#a12624}
+iframe{width:100%;height:55vh;border:1px solid #becbd9;border-radius:6px}
+canvas{width:100%;height:140px;border:1px dashed #49617b;border-radius:6px;background:white;touch-action:none}
+.actions{display:flex;gap:10px;flex-wrap:wrap;margin:.8rem 0}
+.fingerprint{overflow-wrap:anywhere;font-size:14px}
+

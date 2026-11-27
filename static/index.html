@@ -1,0 +1,1084 @@
+<!doctype html>
+<html lang="zh-Hant"><head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<title>車禍和解書</title>
+<style>
+:root{--ink:#1d2530;--paper:#f6f6f2;--line:#d9d9d0;--amber:#f2b300;--blue:#2457d6;--ok:#1f8a5b;--warn:#b4440a;--mute:#777}
+@media(prefers-color-scheme:dark){:root{--ink:#eceae2;--paper:#171b21;--line:#333a44}}
+*{box-sizing:border-box}body{margin:0;background:var(--paper);color:var(--ink);font:16px/1.6 "Noto Sans TC","PingFang TC","Microsoft JhengHei",sans-serif}
+main{max-width:520px;margin:0 auto;padding:16px 16px 80px}
+h1{font-size:22px;margin:8px 0 2px}h2{font-size:17px;margin:18px 0 6px}
+.sub{color:var(--mute);margin:0 0 14px;font-size:14px}
+.steps{display:flex;gap:6px;margin:0 0 14px}.steps button{flex:1;padding:6px 0;border-bottom:4px solid var(--line);font-size:12px;color:var(--mute)}
+.steps .on{border-color:var(--amber);color:var(--ink);font-weight:700}
+section{display:none}section.on{display:block}
+textarea,input,select{width:100%;font:inherit;padding:10px;border:1px solid var(--line);border-radius:6px;background:transparent;color:inherit}
+textarea{min-height:130px}label{display:block;font-size:13px;margin:10px 0 2px;color:var(--mute)}
+.g{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+button{font:inherit;font-weight:700;padding:12px 16px;border:0;border-radius:6px;background:var(--amber);color:#1d2530;width:100%;margin-top:12px;cursor:pointer}
+button:disabled{opacity:.4;cursor:not-allowed}
+button.ghost{background:transparent;border:1px solid var(--line);color:inherit;font-weight:400}
+:focus-visible{outline:3px solid var(--blue);outline-offset:2px}
+.card{border:1px solid var(--line);border-radius:8px;padding:10px 12px;margin:10px 0}
+.q label{color:var(--ink);font-size:15px;font-weight:600;margin:12px 0 4px}
+.hint{border-left:4px solid var(--warn);padding:8px 12px;margin:12px 0;background:rgba(180,68,10,.08);font-size:14px}
+#recipientEmailError{margin:8px 0 0;color:#a3212d}
+#signRecipients input[aria-invalid="true"]{border-color:#be3030}
+.danger{border-left-color:#c0182b;background:rgba(192,24,43,.1)}
+.fault{font-size:15px}.fault b{font-size:20px}.fault ul,.evi{margin:6px 0 0;padding-left:20px;font-size:14px}
+.bar{display:flex;height:10px;border-radius:5px;overflow:hidden;margin:6px 0}.bar i{display:block}
+#frames{display:flex;gap:6px;overflow-x:auto}#frames figure{margin:0;flex:0 0 120px}#frames img{width:120px;border-radius:4px;display:block}#frames figcaption{font-size:11px;color:var(--mute)}
+#r3d{height:280px;border-radius:8px;overflow:hidden;background:#a9cdec;display:flex;align-items:center;justify-content:center;color:#345;font-size:14px}
+.seg{display:flex;gap:6px;flex-wrap:wrap}.seg button{width:auto;flex:1 1 auto;padding:8px 10px;margin-top:6px;font-size:13px}.seg button.on{border-color:var(--amber);font-weight:700}
+#diagram{width:100%;border:1px solid var(--line);border-radius:6px}
+.chk{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px}.chk input{width:22px;height:22px;flex:0 0 auto;margin-top:2px}
+canvas{width:100%;height:140px;border:1px dashed var(--ink);border-radius:6px;background:#fff;touch-action:none}
+.row{display:flex;gap:8px}.row button{margin-top:6px}
+.status{padding:10px;border-radius:6px;background:rgba(31,138,91,.12);color:var(--ok);margin-top:10px;display:none}
+#err{color:var(--warn);font-size:14px;min-height:20px;margin:0 0 6px}
+:root{color-scheme:light;--ink:#15243a;--paper:#edf2f8;--line:#ccd8e7;--amber:#f6c453;--mute:#4d6078}
+body{min-height:100vh;background:linear-gradient(145deg,#e0e9f7,var(--paper) 45%)}
+main{max-width:900px;padding:34px 20px 64px}
+header{padding:clamp(22px,5vw,44px);margin-bottom:18px;border-radius:22px;background:#15243a;color:white}
+header h1{font-size:clamp(27px,4.5vw,42px);margin:0 0 8px;line-height:1.25}
+header .sub{color:#dbe4ef;margin:0}
+.steps button{text-align:center;padding:10px 4px;background:#e0e8f3;border:0;border-radius:9px}
+.steps .on{background:#15243a;color:white}
+.steps .complete{background:#d8eee5;color:#166044}
+section{background:white;border:1px solid var(--line);border-radius:18px;padding:clamp(16px,4vw,30px);box-shadow:0 10px 22px #15243a12}
+section h2:first-child{margin-top:0}
+label{color:var(--ink);font-weight:600}
+textarea,input,select{background:#f8fafc;border-radius:9px}
+textarea{resize:vertical}
+#err:empty{display:none}
+#err{background:#fff1e4;padding:8px 12px;border-radius:8px}
+#r3d{height:clamp(220px,40vw,360px)}
+#r3d canvas{border:0;border-radius:0}
+#pad{height:190px}
+[hidden]{display:none!important}
+@media(max-width:460px){main{padding:16px 12px 36px}.g{grid-template-columns:1fr}.steps{gap:4px}}
+body{background:#e9eff5}
+main{max-width:1160px}
+header{position:relative;overflow:hidden;background:radial-gradient(ellipse at 92% 5%,#285a78,transparent 55%),#101d2e;padding:clamp(26px,6vw,68px);box-shadow:0 16px 35px #14233824}
+header::after{content:"";position:absolute;inset:0;pointer-events:none;background:repeating-linear-gradient(90deg,transparent 0 39px,#8dc8ed16 40px),repeating-linear-gradient(0deg,transparent 0 39px,#8dc8ed16 40px);mask-image:linear-gradient(90deg,transparent 45%,black)}
+header h1{font-size:clamp(32px,5vw,56px);letter-spacing:.025em}
+.steps button{font-weight:650;padding:12px 4px}
+section{padding:clamp(18px,4vw,42px)}
+#p1.on{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(230px,1fr);column-gap:30px}
+#p1 h2,#p1 label[for=txt],#txt{grid-column:1}
+#videoSlots,#go{grid-column:1}
+#videoSlots{min-width:0;margin:12px 0;border:0;padding:0}
+#videoSlots legend{font-weight:700;margin-bottom:8px}
+.video-slot{position:relative;display:flex;align-items:center;gap:12px;margin:0 0 8px;padding:12px;border:1px solid var(--line);border-radius:10px;background:#f5f8fb;cursor:pointer}
+.video-slot:focus-within{outline:2px solid #2457d6;outline-offset:2px}
+.video-slot input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:pointer}
+.video-slot span:last-child{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;color:var(--mute)}
+.address-panel{grid-column:2;grid-row:1 / span 7;align-self:stretch;padding:24px;background:#eef4fa;border:1px solid #d6e2ef;border-radius:14px}
+.examples{grid-column:1;display:grid;grid-template-columns:minmax(0,1fr) auto;gap:5px 10px;margin-top:12px;align-items:center}
+.examples label,.examples p{grid-column:1 / -1;margin:0}
+.examples button{margin:0;white-space:nowrap}
+#viewer{background:#101d2e;color:#f0f6fd;border-radius:16px;overflow:hidden;margin:12px 0 18px}
+#r3d{border-radius:0;height:clamp(260px,48vw,500px)}
+.viewer-controls{padding:12px 16px 14px}
+.viewer-controls .sub{color:#b8c9da;margin:5px 0 0}
+.viewer-controls button.ghost{border-color:#50647b}
+.viewer-controls button.ghost:hover:not(:disabled){background:#243a50}
+.viewer-controls .seg button.on{border-color:#f6c453;color:#f6c453}
+#rt{accent-color:#f6c453;background:transparent}
+#diagram{display:block;border:0;border-radius:0}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:#bfd0e0;margin-bottom:4px}
+.legend span::before{content:"";display:inline-block;width:9px;height:9px;border-radius:50%;margin-right:6px;background:#51a8ff}
+.legend span:nth-child(2)::before{background:#ff994d}
+@media(max-width:680px){#p1.on{display:block}.address-panel{margin-top:18px}.viewer-controls{padding:10px}}
+main{padding-top:16px}
+header{padding:13px 20px;margin-bottom:12px;border-radius:11px;box-shadow:none}
+header h1{font-size:clamp(20px,3vw,29px);margin:0 0 3px}
+header .sub{font-size:13px}
+.steps{margin-bottom:12px}
+.steps button{padding:6px 4px}
+section{padding:clamp(12px,2.2vw,25px)}
+#p1.on{grid-template-columns:minmax(0,1fr) minmax(190px,.45fr);gap:4px 16px}
+.address-panel{padding:14px}
+.scene-settings{padding:8px 12px;border:1px solid var(--line);border-radius:10px;margin:8px 0}
+.scene-settings summary{cursor:pointer;font-weight:650}
+.scene-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(145px,1fr));gap:0 10px;margin:5px 0 8px}
+.scene-grid label{margin:5px 0 0}
+.scene-grid input,.scene-grid select{padding:5px 8px}
+#sceneSummary{margin:4px 0 0}
+#r3d{height:clamp(235px,38vw,410px)}
+main{width:100%;max-width:none;padding:12px clamp(10px,1.25vw,24px) 28px}
+main:not(:has(#p3.on)){max-width:1260px}
+main:has(#p3.on)>header{display:flex;align-items:baseline;gap:16px;padding:8px 14px;margin-bottom:8px}
+main:has(#p3.on)>header h1{flex:none;font-size:20px;margin:0}
+main:has(#p3.on) .steps{margin-bottom:10px}
+main:has(#p3.on) #restart{display:block;width:auto;padding:6px 12px}
+#p3.on{display:grid;grid-template-columns:minmax(0,1fr);gap:12px;align-items:start;padding:0;background:transparent;border:0;box-shadow:none}
+.review-stage,.review-panel{min-width:0;background:#fff;border:1px solid var(--line);border-radius:12px}
+.mobile-controls{display:none}
+.review-stage{position:static;overflow:hidden}
+.stage-heading{display:flex;align-items:baseline;flex-wrap:wrap;gap:2px 12px;padding:8px 12px}
+.stage-heading h2{font-size:16px;margin:0}
+#sceneSummary{font-size:12px;margin:0}
+#viewer{margin:0;border-radius:0}
+#r3d{height:clamp(260px,calc(100dvh - 280px),760px)}
+#diagram{max-height:calc(100dvh - 260px);background:#425264}
+.viewer-controls{padding:6px 12px 8px;display:grid;grid-template-columns:auto minmax(0,1fr) auto;gap:4px 12px;align-items:center}
+.viewer-controls .legend,.viewer-controls #rcap{grid-column:1 / -1;margin:0}
+.viewer-controls .seg{grid-column:1 / -1;gap:5px}
+.viewer-controls button.ghost{font-size:12px;margin:0;padding:4px 7px}
+.viewer-controls .row{gap:5px}
+.viewer-controls output{font-size:12px;white-space:nowrap}
+.review-switch{display:flex;gap:4px;background:#eef3f8;padding:5px;border-radius:10px;margin:8px}
+.review-switch button{margin:0;padding:5px 3px;font-size:13px;background:transparent;color:#283f58}
+.review-switch button[aria-pressed=true]{background:#15243a;color:white}
+.review-switch button:not(.ghost):hover:not(:disabled){background:#dbe7f3;color:#15243a}
+.review-pane{padding:0 12px 12px}
+.review-pane h2{font-size:16px;margin:0 0 5px}
+.review-pane fieldset{padding:4px 8px 7px;margin:0 0 6px;border:1px solid var(--line);border-radius:8px;min-width:0}
+.review-pane legend{font-size:13px;font-weight:700;padding:0 5px;color:#203b57}
+.control-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:4px 8px}
+.environment-controls{grid-template-columns:repeat(3,minmax(0,1fr))}
+.review-pane label{margin:0 0 2px;font-size:12px}
+.review-pane input:not([type=checkbox]),.review-pane select{padding:4px 6px;min-height:32px;font-size:14px}
+.review-pane #reviewCase,.review-pane #mk{padding:7px 10px;margin-top:5px}
+.review-pane .scene-help{font-size:12px;margin:4px 0}
+.review-pane .g{margin-bottom:6px}
+.review-pane .hint,.review-pane .card{margin:7px 0}
+.review-pane #dmg{margin-bottom:6px}
+@media(max-width:820px){
+  #p3.on{grid-template-columns:minmax(0,1fr)}
+  .review-stage{position:static}
+  .mobile-controls{display:inline;margin-left:auto;font-size:13px;color:#2457a6}
+  #r3d{height:clamp(225px,47vw,400px)}
+  main:has(#p3.on)>header .sub{display:none}
+}
+@media(max-width:380px){.environment-controls{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.steps button{margin:0;min-width:0}
+.steps button:not(.ghost):hover:not(:disabled){background:#cbdcf0;color:#142338}
+.steps button.on:not(.ghost):hover:not(:disabled){background:#15243a;color:white}
+</style><style id="replayLayoutStyles">
+.replay-shell{--rp-text:#f1f6fc;--rp-muted:#a7b9cb;--rp-mint:#7dead1;color-scheme:dark;color:var(--rp-text);background:radial-gradient(ellipse at 18% 0,#142740 0,transparent 52%),#09111e;padding:clamp(14px,2.2vw,28px);border-radius:16px}
+.replay-shell h2,.replay-shell h3,.replay-shell p{margin:0}
+.replay-shell .stage-heading{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;margin-bottom:18px;padding:0}
+.replay-shell .stage-heading h2{font-size:clamp(24px,3vw,36px);margin-bottom:5px;line-height:1.15;letter-spacing:-.03em}
+.replay-shell .sub,.replay-shell #rcap{color:var(--rp-muted)}
+.replay-shell a{color:#87c9ff}
+.replay-workspace{display:grid;grid-template-columns:minmax(0,1.72fr) minmax(305px,1fr);gap:18px;align-items:start}
+.replay-workspace:has(>#viewer[hidden]){grid-template-columns:minmax(0,1fr)}
+.replay-shell .replay-card{min-width:0;background:#111e2f;border:1px solid #26364a;border-radius:16px;overflow:hidden;box-shadow:0 14px 32px #050a1466;margin:0;padding:0}
+.replay-card-head{display:flex;justify-content:space-between;align-items:center;gap:8px;padding:17px 19px}
+.replay-card-head h3{font-size:18px}.replay-mode{color:var(--rp-mint);font-size:12px}
+.replay-shell #r3d{height:clamp(280px,42vw,525px);background:#0b101b;border-radius:0}
+.replay-shell .viewer-controls{display:block;padding:14px 18px 17px}
+.replay-shell .transport{display:flex;justify-content:space-between;align-items:center;gap:8px;margin-bottom:8px}
+.replay-shell .legend,.replay-shell .row,.replay-shell .seg{display:flex;flex-wrap:wrap;gap:8px}
+.replay-shell .legend{gap:8px 16px;margin:7px 0;color:var(--rp-muted);font-size:13px}
+.replay-shell .legend span::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;background:#65c9ff}
+.replay-shell .legend span:nth-child(2)::before{background:#ffb476}
+.replay-shell button{width:auto;margin:0;background:#192a3e;color:var(--rp-text);border:1px solid #33485f;border-radius:8px;padding:5px 11px;font:inherit;cursor:pointer}
+.replay-shell button:hover:not(:disabled),.replay-shell button:focus-visible{border-color:#65c9ff}
+.replay-shell button.on,.replay-shell button[aria-pressed=true]{border-color:var(--rp-mint);color:var(--rp-mint)}
+.replay-shell #rplay{background:var(--rp-mint);border-color:var(--rp-mint);color:#082225;font-weight:700}
+.replay-shell #rt{width:100%;margin:8px 0;accent-color:var(--rp-mint)}
+.replay-shell #replayTime{color:var(--rp-mint);font-variant-numeric:tabular-nums;white-space:nowrap}
+.replay-shell #rcap{margin:8px 0;font-size:12px}
+.replay-shell #rv{margin-top:9px}
+.replay-analysis{display:grid;gap:18px;min-width:0}
+.analysis-top{padding:0 18px 10px;display:flex;align-items:center;justify-content:space-between;gap:8px;flex-wrap:wrap}
+.analysis-top button{font-size:12px;padding:4px 8px}
+.analysis-values{display:grid;grid-template-columns:repeat(auto-fit,minmax(85px,1fr));gap:8px;padding:0 18px 12px;font-variant-numeric:tabular-nums}
+.analysis-values>span{min-width:0;background:#16263a;border:1px solid #293b50;border-radius:9px;padding:9px;font-weight:700;overflow-wrap:anywhere}
+.replay-shell #replayChart{display:block;width:100%;height:auto;max-height:240px;padding:0 10px;cursor:crosshair}
+.replay-shell #replayChartNote{padding:3px 18px 15px;font-size:12px}
+.replay-shell #replayEvents{list-style:none;padding:0 14px 13px;margin:0;display:grid;gap:5px}
+.replay-shell #replayEvents button{display:grid;grid-template-columns:62px minmax(0,1fr);gap:3px 10px;width:100%;text-align:left;border-color:transparent;background:#152438;padding:9px 11px}
+.replay-shell #replayEvents .replay-event-time{color:var(--rp-mint);font-size:12px;font-variant-numeric:tabular-nums}
+.replay-shell #replayEvents small{grid-column:2;color:var(--rp-muted);font-size:12px;overflow-wrap:anywhere}
+.replay-shell #replayEvents button[aria-current=true]{border-color:#4d918c;background:#193844}
+.replay-shell .replay-files,.replay-shell details{margin-top:16px}
+.replay-shell details{padding:13px 18px;background:#111e2f;border:1px solid #26364a;border-radius:12px}
+.replay-shell details pre{overflow:auto;max-height:26rem;font-size:12px}
+.replay-shell [hidden]{display:none!important}
+ .replay-sidebar{min-width:0;display:flex;flex-direction:column;gap:10px;max-height:max(425px,calc(100dvh - 210px))}
+.replay-shell .review-switch{display:flex;flex-wrap:wrap;gap:4px;padding:5px;background:#111e2f;border:1px solid #26364a;border-radius:11px;margin:0}
+.replay-shell .review-switch button{flex:1 0 auto;padding:6px 8px;font-size:13px;white-space:nowrap}
+.replay-shell .review-switch button[aria-pressed=true]{background:#193844}
+.replay-side-content{min-height:0;overflow:auto;overscroll-behavior:contain;scrollbar-gutter:stable}
+.replay-shell .review-pane{color-scheme:light;color:var(--ink);background:#fff;padding:12px;border-radius:12px;min-width:0}
+.replay-shell .review-pane .sub{color:var(--mute)}
+.replay-shell .review-pane button{color:var(--ink);background:#f6c455;width:100%;margin-top:5px}
+.replay-shell .review-pane a{color:#2457d6}
+.replay-shell .review-pane details{color:var(--ink);background:#edf3f8;border-color:#d1dfeb;margin:10px 0}
+.replay-shell .stage-heading .replay-files{margin:0;flex:none}
+.replay-shell .stage-heading .replay-files button{font-size:13px}
+.replay-sidebar:has(#replayOverview:not([hidden])){max-height:none}
+.replay-sidebar:has(#replayOverview:not([hidden])) .replay-side-content{overflow:visible;scrollbar-gutter:auto}
+@media(min-width:901px){
+  .replay-workspace > #viewer:not([hidden]) + .replay-sidebar:not(:has(#replayOverview:not([hidden]))){
+    align-self:stretch;
+    contain:size;
+    max-height:none;
+  }
+  .replay-workspace > #viewer:not([hidden]) + .replay-sidebar:not(:has(#replayOverview:not([hidden]))) .replay-side-content{
+    flex:1 1 auto;
+  }
+  .replay-workspace > #viewer:not([hidden]) + .replay-sidebar:not(:has(#replayOverview:not([hidden]))) .review-pane{
+    min-height:100%;
+  }
+}
+.review-stage.replay-shell #r3d{height:clamp(245px,calc(100dvh - 365px),525px)}
+@media(max-width:900px){
+  .replay-workspace{grid-template-columns:minmax(0,1fr)}
+  .replay-sidebar{max-height:none}
+  .replay-side-content{overflow:visible}
+}
+</style>
+</head><body><main>
+<header><h1>交通事故和解助手</h1><p class="sub">整理事故經過、核對雙方資料，並製作可預覽與簽名的和解書 PDF。</p></header>
+<nav class="steps" aria-label="辦理進度">
+  <button type="button" id="s1" class="on" aria-current="step">1 建立案件</button><button type="button" id="s2" disabled>2 補充資料</button>
+  <button type="button" id="s3" disabled>3 核對內容</button><button type="button" id="s4" disabled>4 簽署進度</button>
+</nav>
+<p id="err" role="alert"></p><p id="editNotice" class="hint" role="status" hidden></p>
+
+<section id="p1" class="on"><h2>輸入事故資料</h2>
+<label for="txt">事故經過</label>
+<textarea id="txt" placeholder="例:今天下午3點10分在中山路與民權路口,我的車 ABC-1234 停等紅燈,被後方 XYZ-5678 追撞…"></textarea>
+<div class="examples">
+  <label for="example">事故範例</label>
+  <select id="example">
+    <option value="">請選擇事故類型</option>
+  </select>
+  <button class="ghost" id="importExample" disabled>匯入範例</button>
+  <p class="sub" id="exampleStatus" role="status"></p>
+</div>
+<fieldset id="videoSlots"><legend>事故影片（上限200 MB）</legend>
+  <label class="video-slot"><span>事故影片</span><input type="file" accept="video/*" id="accidentVideo" aria-label="事故影片"><span>未選擇檔案</span></label>
+<p class="sub" id="glowsVideoNotice" hidden>分析影片時，原始影片也會傳送至 Glows.ai 進行 YOLO 車輛與行人偵測。</p>
+</fieldset>
+<button id="go">分析事故</button>
+<p class="sub" id="analysisProgress" role="status" hidden></p>
+<aside class="address-panel">
+  <h2>事故地點</h2>
+  <label for="accidentAddress">事故地址</label>
+  <input id="accidentAddress" type="text" maxlength="300" placeholder="請直接輸入事故地址">
+</aside>
+</section>
+
+<section id="p2">
+<h2>AI 需要再確認幾件事</h2><p class="sub" id="qinfo"></p>
+<div id="qs"></div>
+<button id="qsend">送出補充</button>
+<button class="ghost" id="qskip">略過,我自己在下一步填</button>
+</section>
+
+<section id="p3">
+<div class="review-stage replay-shell">
+  <header class="stage-heading"><div><h2>事故重播與軌跡分析</h2><p class="sub" id="sceneSummary"></p></div><div class="replay-files"><button type="button" id="downloadReplay" hidden>下載 3D 重播</button><p class="sub" id="exportStatus" role="status" hidden></p></div></header>
+  <div class="replay-workspace">
+    <div id="viewer" class="replay-card"><div class="replay-card-head"><h3>事故重播</h3><span class="replay-mode" id="replayMode">3D 場景</span></div>
+      <div id="r3d"></div><svg id="diagram" viewBox="0 0 320 150" style="display:none"></svg>
+      <div class="viewer-controls">
+        <div class="transport"><div class="row"><button type="button" id="rplay">暫停</button><button type="button" id="rspeed" aria-label="播放速度">1×</button></div><output id="replayTime" for="rt"></output></div>
+        <input type="range" id="rt" min="0" max="500" value="0" aria-label="重播時間軸">
+        <div class="legend"><span id="legendA">甲方</span><span id="legendB">乙方</span></div>
+        <p class="sub" id="rcap">點擊播放／暫停 · 拖曳旋轉 · 滾輪縮放</p>
+        <div id="rv" class="seg" role="group" aria-label="視角"><button type="button" data-view="bird" class="on">斜上方</button><button type="button" data-view="chase">後方追蹤</button><button type="button" data-view="side">側視</button><button type="button" data-view="inA">甲方視角</button><button type="button" data-view="inB">乙方視角</button></div>
+      </div>
+    </div>
+    <div class="replay-sidebar" aria-label="事故工作台">
+      <div class="review-switch" id="reviewSwitch" role="group" aria-label="切換工作區">
+        <button type="button" data-panel="replayOverview" aria-pressed="true">參數分析與事件</button>
+        <button type="button" data-panel="scenePanel" aria-pressed="false">模擬設定</button>
+        <button type="button" data-panel="casePanel" aria-pressed="false">和解資料</button>
+        <button type="button" data-panel="evidencePanel" aria-pressed="false">影像與參考</button>
+      </div>
+      <div class="replay-side-content" id="reviewContent">
+        <p class="sub" id="reviewEmpty" hidden>目前沒有可用的重播資料。可切到「影像與參考」或「和解資料」。</p>
+    <div id="replayOverview">
+    <aside class="replay-analysis" id="replayAnalysis" aria-label="重播參數與關鍵事件" hidden>
+      <div class="replay-card" id="analysisPanel"><div class="replay-card-head"><h3>參數分析</h3></div>
+        <div class="analysis-values" id="replayValues"></div>
+        <div class="analysis-top" role="group" aria-label="圖表參數">
+          <button type="button" id="plotSpeed" aria-pressed="true">平面速度</button><button type="button" id="plotRoll" aria-pressed="false">側傾角</button>
+        </div>
+        <svg id="replayChart" viewBox="0 0 580 175" role="img" aria-label="重播參數曲線"></svg>
+        <p class="sub" id="replayChartNote"></p>
+      </div>
+      <div class="replay-card" id="eventsPanel"><div class="replay-card-head"><h3>關鍵事件</h3></div><ul id="replayEvents"></ul></div>
+    </aside>
+    </div>
+  <div id="scenePanel" class="review-pane">
+    <fieldset><legend>甲乙方</legend><div class="control-grid" id="partyControls">
+<div><label for="av">甲方參與者類型</label><select id="av"></select></div><div><label for="bv">乙方參與者類型</label><select id="bv"></select></div>
+    </div></fieldset>
+    <fieldset><legend>第三方</legend><div class="control-grid" id="thirdControls"></div></fieldset>
+    <fieldset><legend>環境</legend><div class="control-grid environment-controls" id="environmentControls"></div></fieldset>
+    <p class="sub scene-help">速度留空使用預設路徑，輸入 0 表示碰撞前靜止。碰撞後沿用示意動作。</p>
+    <button type="button" id="reviewCase">下一步：核對和解資料</button>
+  </div>
+  <div id="casePanel" class="review-pane" hidden>
+    <h2>和解資料</h2>
+<div id="combinedAccount" hidden><h3>AI分析 整合後的事故經過</h3><p id="combinedNarrative" style="white-space:pre-wrap"></p><p id="videoErrors" role="status"></p><label for="videoChoice">原始影片</label><select id="videoChoice"></select><video id="sourceVideo" controls playsinline preload="none" style="width:100%"></video>
+<div id="yoloResult" hidden>
+  <h3>Glows.ai YOLO 影片偵測</h3>
+  <p class="sub">辨識框標示模型偵測到的人車，事故參與者與碰撞情況仍需核對。</p>
+  <p id="yoloError" role="status" hidden></p>
+  <video id="yoloVideo" controls playsinline preload="none" style="width:100%" hidden></video>
+  <a id="yoloDownload" download="yolo-detections.mp4" hidden>下載辨識影片</a>
+</div></div>
+<div class="hint danger" id="inj" style="display:none"><b>有人受傷:</b>請先報警、就醫並保留證據,再評估是否和解。</div>
+
+<div class="g"><div><label for="time">時間</label><input id="time"></div><div><label for="loc">地點</label><input id="loc"></div>
+<div><label for="an">甲方(我)姓名</label><input id="an"></div><div><label for="ap">甲方車牌</label><input id="ap"></div>
+<div><label for="bn">乙方(對方)姓名</label><input id="bn"></div><div><label for="bp">乙方車牌</label><input id="bp"></div></div>
+<label for="dmg">車輛損害</label><input id="dmg">
+<div id="reviewDescriptionBox" hidden><label for="reviewDescription">事故經過</label><textarea id="reviewDescription"></textarea></div>
+<div class="g"><div><label for="injsel">人員受傷</label><select id="injsel"><option>沒有</option><option>有</option><option>不確定</option></select></div>
+<div><label for="amt">和解金額(元,0 = 互不請求)</label><input id="amt" type="number" min="0" step="1" inputmode="numeric"></div></div>
+<fieldset><legend>和解條件</legend>
+<div class="g"><div><label for="settlementContactA">甲方聯絡資料（選填）</label><input id="settlementContactA" maxlength="240" placeholder="電話或聯絡地址"></div>
+<div><label for="settlementContactB">乙方聯絡資料（選填）</label><input id="settlementContactB" maxlength="240" placeholder="電話或聯絡地址"></div></div>
+<div id="settlementPayment" hidden>
+<label for="settlementPayer">付款方</label><select id="settlementPayer"><option value="">請選擇</option><option value="A">甲方支付給乙方</option><option value="B">乙方支付給甲方</option></select>
+<label for="settlementPaymentDetails">付款方式與期限</label><textarea id="settlementPaymentDetails" maxlength="1000" placeholder="例如約定的匯款日期，或分期的各期金額與到期日"></textarea>
+</div>
+<label for="settlementScope">和解範圍（選填）</label><textarea id="settlementScope" maxlength="1000" placeholder="列出納入和解的損害或費用，例如車輛修理費"></textarea>
+<label for="settlementInsurance">保險給付與和解金的約定（選填）</label><textarea id="settlementInsurance" maxlength="1000" placeholder="有另行約定時，寫明保險給付是否計入和解金"></textarea>
+<div class="g"><div><label for="settlementCaseReference">事故案號（選填）</label><input id="settlementCaseReference" maxlength="120"></div>
+<div><label for="settlementSigningPlace">立書地點（選填）</label><input id="settlementSigningPlace" maxlength="120"></div></div>
+<label for="settlementAdditional">其他約定（選填）</label><textarea id="settlementAdditional" maxlength="1000"></textarea>
+</fieldset>
+<fieldset id="signRecipients"><legend>簽署收件人</legend>
+<p class="sub">App 會寄信給甲乙雙方，各自在自己的裝置上驗證信箱並簽名。</p>
+<div class="g"><div><label for="emailA">甲方 Email</label><input id="emailA" type="email" maxlength="254" aria-describedby="recipientEmailError"></div>
+<div><label for="emailB">乙方 Email</label><input id="emailB" type="email" maxlength="254" aria-describedby="recipientEmailError"></div></div>
+<p id="recipientEmailError" role="status" hidden>甲乙雙方的 Email 不能相同，請輸入不同的信箱。</p></fieldset>
+<p class="sub" id="draftStatus" role="status"></p>
+<ul id="draftMissing" hidden></ul>
+<p id="reviewError" class="hint danger" role="alert" hidden></p>
+<button id="saveReview" type="button" hidden>儲存修改</button>
+<div id="draftApproval" hidden>
+<p><button id="draftPreview" type="button" class="ghost" hidden>預覽送簽版 PDF</button></p>
+<div class="chk"><input type="checkbox" id="c1"><label for="c1" style="margin:0;color:var(--ink)">我已逐項核對以上內容，並了解 AI 初判僅供參考。</label></div>
+<div class="chk" id="c2box" hidden><input type="checkbox" id="c2"><label for="c2" style="margin:0;color:var(--ink)">有人受傷，我已報警或就醫，仍要繼續製作和解書。</label></div>
+<button id="mk" disabled>確認文件並寄出邀請</button>
+</div>
+
+  </div>
+  <div id="evidencePanel" class="review-pane" hidden>
+    <h2>影像與參考</h2>
+  <details id="reconstructionDetails" hidden><summary>查看 3D 座標與影片依據</summary><pre id="reconstructionData"></pre></details>
+    <p class="sub" id="noEvidence" hidden>此案件沒有上傳事故影片。</p>
+<div id="framebox"><h2>影片關鍵畫面</h2><div id="frames"></div></div>
+<ul class="evi" id="evi"></ul>
+
+<div class="card fault"><div>責任情境參考 <b id="fp"></b> <span class="sub" id="fc"></span></div>
+<div class="bar" id="faultBar"><i id="ba" style="background:var(--blue)"></i><i id="bb" style="background:var(--amber)"></i></div>
+<ul id="reasons"></ul></div>
+<div class="hint">初判只是一般原則的參考,<b>不是責任認定</b>。請核對內容,有出入就直接修改下方欄位。</div>
+
+</div>      </div>
+    </div>
+  </div>
+</div></section>
+<section id="p4">
+<h2>簽署</h2>
+<p id="dispatchStatus" role="status"></p>
+<p><a id="ownerProgress" target="_blank" rel="noopener noreferrer">開啟發起人進度頁</a></p>
+<p class="sub">請私下保管發起人連結，以便日後查進度、下載 3D 重播 或已簽 PDF。</p>
+<button id="copyOwnerLink" class="ghost" type="button">複製發起人連結</button>
+<p id="ownerLinkStatus" role="status"></p>
+</section>
+<button id="restart" class="ghost" hidden>回到首頁</button></main>
+<script src="/scenario.js?v=8"></script>
+<script type="importmap" data-replay-module="/replay-cinematic.js?v=5">{"imports":{"three":"https://cdn.jsdelivr.net/npm/three@0.160.1/build/three.module.js","three/addons/":"https://cdn.jsdelivr.net/npm/three@0.160.1/examples/jsm/"}}</script>
+<script src="/replay-analysis.js?v=3"></script>
+<script src="/replay-export.js?v=7"></script>
+<script>
+const $=id=>document.getElementById(id);
+let C=null, currentStep=1, busy=false, reviewReady=false;
+let analyzedSource=null, pdfSnapshot=null, reviewBaseline=null, analysisVersion=0;
+let previewedRevision=null;
+let savedAnswers={}, questionHistory=new Map(), approvedSnapshot=null, savedReviewSnapshot=null;
+const caseCredentials=new Map();
+const videoInput=$("accidentVideo");
+videoInput.addEventListener("change",()=>{
+  videoInput.nextElementSibling.textContent=videoInput.files[0]?.name || "未選擇檔案";
+});
+const sourceSnapshot=()=>({text:$("txt").value, location:$("accidentAddress").value.trim(),
+  files:[...videoInput.files], scenario:exampleScenarios.get($("txt").value.trim()) ?? null});
+const sameVideos=(a,b)=>a.length===b.length && a.every((file,index)=>file===b[index]);
+const sourceDirty=()=> {
+  if (!analyzedSource) return false;
+  const a=sourceSnapshot();
+  return a.text!==analyzedSource.text || a.location!==analyzedSource.location ||
+    !sameVideos(a.files,analyzedSource.files) || a.scenario!==analyzedSource.scenario;
+};
+const settlementFields = {
+  payer:"settlementPayer", payment_details:"settlementPaymentDetails", scope:"settlementScope",
+  insurance:"settlementInsurance", case_reference:"settlementCaseReference",
+  signing_place:"settlementSigningPlace", additional:"settlementAdditional",
+  contact_a:"settlementContactA", contact_b:"settlementContactB",
+};
+const reviewFields = ["time","loc","an","ap","bn","bp","dmg","amt","injsel","av","bv","reviewDescription",
+  ...Object.values(settlementFields)];
+const reviewValues = () => Object.fromEntries(reviewFields.map(id=>[id,$(id).value]));
+const pdfValues = () => JSON.stringify([analysisVersion,reviewValues(),C.data.scenario]);
+const signingEmails = () => [$("emailA").value.trim(), $("emailB").value.trim()];
+const approvalValues = () => JSON.stringify([pdfValues(),signingEmails()]);
+const pendingAnswers = () => Object.fromEntries([...$("qs").querySelectorAll("[data-key]")]
+  .map(field=>[field.dataset.key,field.value.trim()])
+  .filter(([key,value])=>value!==(savedAnswers[key]||"")));
+
+function updateSteps() {
+  if ($("c1").checked && approvedSnapshot!==null && approvedSnapshot!==approvalValues()) {
+    $("c1").checked=$("c2").checked=false;
+    gate();
+  }
+  const upstream = sourceDirty() || Object.keys(pendingAnswers()).length>0;
+  gate();
+  const pdfCurrent = pdfSnapshot!==null && !upstream && pdfSnapshot===pdfValues();
+  const available=[true,!!C,reviewReady,pdfCurrent];
+  for(let i=1;i<=4;i++) {
+    const step=$("s"+i);
+    step.disabled=busy || !available[i-1];
+    step.classList.toggle("complete",available[i-1] && i!==currentStep);
+  }
+  const notice=$("editNotice");
+  notice.hidden=!(pdfSnapshot!==null && !pdfCurrent);
+  notice.textContent=notice.hidden ? "" : "請先儲存修改。舊版未完成的邀請將失效，雙方需核對並簽署新版。";
+}
+const show = n => {
+  currentStep=n;
+  for (let i = 1; i <= 4; i++) {
+    const active = i === n;
+    $("p" + i).classList.toggle("on", active);
+    const step = $("s" + i);
+    step.classList.toggle("on", active);
+
+    if (active) step.setAttribute("aria-current", "step");
+    else step.removeAttribute("aria-current");
+  }
+  $("restart").hidden = n === 1;
+  $("err").textContent = "";
+  updateSteps();
+  scrollTo(0, 0);
+};
+$("restart").onclick = () => location.reload();
+const api=async(u,m="GET",b,signal,options={})=>{
+  const headers={};
+  const cid=u.startsWith("/api/cases/") ? u.split("/")[3] : null;
+  const owner=options.credential || caseCredentials.get(cid);
+  if (owner) headers.Authorization="Bearer "+owner;
+  const o={method:m,signal,headers};
+  if(b instanceof FormData)o.body=b;
+  else if(b){headers["Content-Type"]="application/json";o.body=JSON.stringify(b)}
+  const r=await fetch(u,o);
+  if(!r.ok){const t=await r.text();let m2=t;try{m2=JSON.parse(t).detail||t}catch(e){}throw new Error(("("+r.status+") "+m2).slice(0,300))}
+  if(options.pdf) return r.blob();
+  const result=await r.json();
+  const created=result.result || result;
+  if(created.owner_token) caseCredentials.set(created.id,created.owner_token);
+  return result;
+};
+const run=(btn,f)=>async()=>{
+  if (busy) return;
+  busy=true; updateSteps();
+  $("err").textContent="";
+  const reviewError=btn.closest("#casePanel") ? $("reviewError") : null;
+  if (reviewError) reviewError.hidden=true;
+  const old=btn.textContent;
+  btn.disabled=true;btn.textContent="處理中…";
+  try { await f(); }
+  catch(e){
+    const error=reviewError || $("err");
+    error.textContent=e.message;
+    error.hidden=false;
+  }
+  finally { busy=false; btn.disabled=false; btn.textContent=old; gate(); updateSteps(); }
+};
+const li=(ul,t)=>{const e=document.createElement("li");e.textContent=t;ul.append(e)};
+const participantTypes = ["汽車","行人","機車","自行車","公車","貨車"];
+for (const id of ["av","bv"]) {
+  $(id).add(new Option("未確認",""));
+  participantTypes.forEach(type => $(id).add(new Option(type,type)));
+}
+const accidentExamples = [
+  ["紅燈停等遭追撞","汽車","汽車","甲方停等紅燈，遭乙方從後方追撞。"],
+  ["變換車道擦撞","汽車","汽車","甲方沿外側車道直行，乙方從內側變換車道，擦撞甲方左側車門。"],
+  ["路口左轉碰撞","汽車","汽車","甲方綠燈直行，與對向左轉的乙方碰撞。"],
+  ["行人穿越斑馬線","行人","汽車","甲方沿斑馬線穿越路口，乙方右轉時與甲方碰撞。"],
+  ["機車停等遭汽車追撞","機車","汽車","甲方停等紅燈，遭乙方從後方追撞。"],
+  ["汽車右轉與機車碰撞","機車","汽車","甲方沿外側車道直行，乙方在路口右轉時與甲方碰撞。"],
+  ["公車進站擦撞機車","機車","公車","甲方沿外側車道直行，乙方變換車道靠向公車站時發生擦撞。"],
+  ["公車停靠遭貨車追撞","公車","貨車","甲方停靠站位，乙方減速不及從後方追撞。"],
+  ["自行車與轉彎貨車碰撞","自行車","貨車","甲方沿自行車道直行，乙方在路口右轉時發生碰撞。"],
+  ["自行車與行人在路口碰撞","行人","自行車","甲方於路口穿越自行車道，與直行的乙方碰撞。"],
+  ["貨車變換車道擦撞汽車","汽車","貨車","甲方沿外側車道直行，乙方變換車道時擦撞甲方。"],
+  ["兩輛機車追撞","機車","機車","甲方停等紅燈，乙方從後方追撞。"],
+  ["公車左轉與汽車碰撞","汽車","公車","甲方在路口直行，與對向左轉的乙方發生碰撞。"]
+];
+accidentExamples.push(
+  ...extraAccidents,
+  ["雨天閃避對向來車翻覆","汽車","汽車","","下雨","白天","無號誌",26,30,"無","無","oncoming_rollover","2026年4月5日下午1點20分，天氣陰天下雨，甲方為汽車，乙方為汽車。雨天路面濕滑，甲方駕車行經時，因乙方跨越雙黃線，為閃避從對向駛來的乙方汽車，轉向後失控翻覆，兩車未發生碰撞。雙方正在確認受傷情況與損失。"],
+);
+accidentExamples.forEach(([title], index) => $("example").add(new Option(title, String(index))));
+function exampleText(index) {
+  const row = accidentExamples[index], [,a,b,narrative] = row;
+  const fullText = row[12];
+  if (fullText) return fullText;
+  const s = scenarioForExample(index,row);
+  const clock = {"白天":"上午10點","黃昏":"下午5點40分","夜間":"晚上9點"}[s.light];
+  return "11月20日" + clock + "在中山路與民權路口，天氣" + s.weather + "，甲方為" + a + "，乙方為" + b + "。" + narrative + "。雙方正在確認受傷情況與損失。";
+}
+const exampleScenarios = new Map(accidentExamples.map((row,index) =>
+  [exampleText(index), scenarioForExample(index,row)]));
+const sceneLabels = {
+  weather:"天氣",light:"天色",signal:"號誌燈色",
+  thirdVehicle:"第三方車輛",thirdPedestrian:"第三方行人",
+  speedA:"甲方速度（km/h）",speedB:"乙方速度（km/h）",
+  speedVehicle:"第三方車速（km/h）",speedPedestrian:"第三方步速（km/h）",
+};
+for (const [key,title] of Object.entries(sceneLabels)) {
+  const label = document.createElement("label");
+  label.htmlFor = "scene-" + key;
+  label.textContent = title;
+  const choices = scenarioFields[key];
+  const field = document.createElement(choices ? "select" : "input");
+  field.id = label.htmlFor;
+  if (choices) choices.forEach(value=>field.add(new Option(value,value)));
+  else {
+    field.type="number"; field.min="0"; field.max=key==="speedPedestrian" ? "20" : "130";
+    field.step="any"; field.placeholder="預設";
+  }
+  field.onchange = () => {
+    if (field.value && !field.checkValidity()) {
+      field.reportValidity();
+      field.value = C.data.scenario[key] ?? "";
+      return;
+    }
+    C.data.scenario[key] = choices ? field.value : field.value === "" ? scenarioDefaults[key] : field.valueAsNumber;
+    field.value = C.data.scenario[key] ?? "";
+    refreshReplay();
+    updateSteps();
+  };
+  const group=document.createElement("div");
+  group.append(label,field);
+  const destination = ["speedA","speedB"].includes(key) ? "partyControls"
+    : ["weather","light","signal"].includes(key) ? "environmentControls" : "thirdControls";
+  $(destination).append(group);
+}
+function fillScenario(scenario) {
+    const evening = /黃昏|傍晚/.test(C.data.time);
+  const night = /晚上|凌晨|深夜/.test(C.data.time);
+  const light = evening ? "黃昏" : night ? "夜間" : "白天";
+  C.data.scenario={...scenarioDefaults,light,...C.data.scenario,...scenario};
+  for (const key of Object.keys(sceneLabels)) $("scene-"+key).value=C.data.scenario[key] ?? "";
+}
+function summarizeScenario() {
+  const s=C.data.scenario;
+  const speed = value => value === null ? "預設" : value + " km/h";
+  const items=[s.weather,s.light,s.signal,"甲方 "+speed(s.speedA),"乙方 "+speed(s.speedB)];
+  if (s.thirdVehicle !== "無") items.push("第三方"+s.thirdVehicle+" "+speed(s.speedVehicle));
+  if (s.thirdPedestrian === "有") items.push("第三方行人 "+speed(s.speedPedestrian));
+  $("sceneSummary").textContent=items.join(" · ");
+}
+
+$("example").onchange = () => {
+  $("importExample").disabled = !$("example").value;
+  $("exampleStatus").textContent = "";
+};
+$("importExample").onclick = () => {
+  const example = $("example").value === "" ? "" : exampleText(Number($("example").value));
+  if (!example) return;
+  const input = $("txt");
+  if (input.value.trim() && input.value !== example && !confirm("要用選擇的範例取代目前的事故描述嗎？")) return;
+  input.value = example;
+  $("exampleStatus").textContent = "已匯入，可修改描述後再按「分析事故」。";
+  input.focus();
+  updateSteps();
+};
+
+function manualReview() {
+  if (!reviewReady) return {};
+  return Object.fromEntries(Object.entries(reviewValues()).filter(([key,value])=>value!==reviewBaseline[key]));
+}
+function acceptAnalysis(result, edits, scenario) {
+  if (C?.id!==result.id) $("emailA").value=$("emailB").value="";
+  C=result;
+  rememberQuestions();
+  enter3(edits, scenario);
+  if (C.missing.length && !C.video_url) show(2);
+}
+async function analyzeVideoUpload(form) {
+  const status=$("analysisProgress");
+  const started=Date.now();
+  status.hidden=false;
+  status.textContent="正在上傳影片…";
+  try {
+    const {job_id,job_token}=await api("/api/analysis-jobs","POST",form,AbortSignal.timeout(600000));
+    const endpoint="/api/analysis-jobs/"+job_id;
+    while (Date.now()-started<2700000) {
+      const job=await api(endpoint,"GET",null,AbortSignal.timeout(15000),{credential:job_token});
+      if (job.stage==="done") return job.result;
+      if (job.stage==="failed") throw new Error(job.message);
+      const stages={
+        sending_video:"正在將原始影片傳給 Gemini",
+        processing_video:"Gemini 正在讀取影片",
+        describing_video:"Gemini 正在撰寫事發經過",
+        detecting_video:"正在等待 Glows.ai YOLO 辨識影片",
+        summarizing:"正在整理結果與待補資料",
+      };
+      status.textContent=`${job.current ? `影片 ${job.current}／${job.total} · ` : ""}${stages[job.stage] || "正在處理影片"} · 已等待 ${Math.floor((Date.now()-started)/1000)} 秒`;
+      await new Promise(resolve=>setTimeout(resolve,1500));
+    }
+    throw new Error("等候分析結果逾時，服務可能仍在處理。");
+  } catch (error) {
+    if (error.name==="TimeoutError") throw new Error("與服務連線逾時，請確認服務是否仍在執行。");
+    throw error;
+  } finally {
+    status.hidden=true;
+  }
+}
+$("go").onclick=run($("go"),async()=>{
+  if (C && !sourceDirty()) {
+    show(2);
+    return;
+  }
+  const inputs=sourceSnapshot();
+  const changedVideo=!sameVideos(inputs.files,analyzedSource?.files || []);
+  const edits=changedVideo ? {} : manualReview();
+  const previousScenario=C?.data.scenario;
+  const scenario=inputs.scenario!==analyzedSource?.scenario ? inputs.scenario : previousScenario;
+  const answers=changedVideo ? {} : {...savedAnswers,...pendingAnswers()};
+  if (inputs.location!==analyzedSource?.location && inputs.location) {
+    delete answers.location;
+    delete edits.loc;
+  }
+  const fd=new FormData();
+  fd.append("text",inputs.text);
+  fd.append("location",inputs.location);
+  for (const file of inputs.files) fd.append("file",file);
+  let result=inputs.files.length ? await analyzeVideoUpload(fd) : await api("/api/analyze","POST",fd);
+  if(Object.values(answers).some(Boolean)) result=await api("/api/cases/"+result.id+"/answers","POST",{answers});
+  if (changedVideo) questionHistory.clear();
+  savedAnswers=answers;
+  analyzedSource=inputs;
+  if (C && C.id!==result.id) await api("/api/cases/"+C.id+"/revoke","POST");
+  if (C?.id!==result.id) pdfSnapshot=null;
+  acceptAnalysis(result,edits,scenario);
+});
+const reviewButtons = [...document.querySelectorAll(".review-switch button")];
+let selectedReviewPanel;
+function selectReviewPanel(id, moveFocus = false) {
+  if (selectedReviewPanel!==id) $("reviewContent").scrollTop=0;
+  selectedReviewPanel=id;
+  updateReviewAvailability();
+  for (const button of reviewButtons) {
+    const active = button.dataset.panel === id;
+    button.setAttribute("aria-pressed", String(active));
+    $(button.dataset.panel).hidden = !active;
+    if (active && moveFocus) button.focus();
+  }
+}
+function updateReviewAvailability() {
+  const isAnalysis=selectedReviewPanel==="replayOverview";
+  $("reviewEmpty").hidden=!isAnalysis || !$("replayAnalysis").hidden;
+}
+for (const button of reviewButtons) button.onclick = () => selectReviewPanel(button.dataset.panel);
+$("reviewCase").onclick = () => selectReviewPanel("casePanel", true);
+
+function enter3(edits={}, scenario=C.data.scenario) {
+  fill();
+  const exampleRollover = scenario?.trajectory === "oncoming_rollover";
+  fillScenario(C.video_url && !exampleRollover ? C.data.scenario : scenario);
+  reviewBaseline=reviewValues();
+  savedReviewSnapshot=pdfValues();
+  for (const [id,value] of Object.entries(edits)) $(id).value=value;
+  C.data.party_a.vehicle=$("av").value;
+  C.data.party_b.vehicle=$("bv").value;
+  reviewReady=true;
+  gate();
+  selectReviewPanel(selectedReviewPanel || "replayOverview");
+  show(3);
+  refreshReplay();
+}
+$("videoChoice").onchange=()=>{ $("sourceVideo").src=$("videoChoice").value; };
+function replayDataForCase(caseData) {
+  const {data} = caseData;
+  if (data.scenario?.trajectory === "oncoming_rollover") {
+    return {
+      ...data, reconstruction:null, relative_crossing:null,
+      party_a:{...data.party_a,vehicle:"汽車"},
+      party_b:{...data.party_b,vehicle:"汽車"},
+    };
+  }
+  return caseData.video_url ? {...data,reconstruction:null} : data;
+}
+
+function combinedNarrative(data) {
+  const crossing = data.relative_crossing;
+  if (!crossing) return data.description;
+  const reference = crossing.reference_party === "A" ? "甲方" : "乙方";
+  const moving = crossing.reference_party === "A" ? "乙方" : "甲方";
+  const [start,end] = crossing.direction === "left_to_right" ? ["左側","右側"] : ["右側","左側"];
+  const sentence = `以${reference}的行進方向為前方，${moving}在接觸前由${start}往${end}橫越。`;
+  return [data.description,sentence].filter(Boolean).join("\n");
+}
+
+function refreshReplay() {
+  $("combinedAccount").hidden=!C.video_url;
+  $("combinedNarrative").textContent=combinedNarrative(C.data);
+  const choices=$("videoChoice");
+  if (C.video_url && choices.dataset.case!==C.id) {
+    choices.replaceChildren(...C.videos.map(video=>new Option(video.name+(video.analyzed ? "" : "（未完成分析）"),video.url)));
+    choices.dataset.case=C.id;
+    $("sourceVideo").src=choices.value;
+  }
+  $("videoErrors").textContent=(C.video_errors || []).join(" ");
+  $("yoloResult").hidden=!(C.yolo_url || C.yolo_error);
+  $("yoloError").hidden=!C.yolo_error;
+  $("yoloError").textContent=C.yolo_error || "";
+  const yoloVideo=$("yoloVideo"), yoloDownload=$("yoloDownload");
+  yoloVideo.hidden=yoloDownload.hidden=!C.yolo_url;
+  if (C.yolo_url && yoloVideo.getAttribute("src")!==C.yolo_url) {
+    yoloVideo.src=yoloDownload.href=C.yolo_url;
+  } else if (!C.yolo_url && yoloVideo.hasAttribute("src")) {
+    yoloVideo.removeAttribute("src");
+    yoloVideo.load();
+    yoloDownload.removeAttribute("href");
+  }
+  const replayData=replayDataForCase(C);
+  const reconstruction=replayData.reconstruction;
+  const rollover = replayData.scenario?.trajectory === "oncoming_rollover";
+  $("reconstructionDetails").hidden=!reconstruction;
+  $("reconstructionData").textContent=reconstruction ? JSON.stringify(reconstruction,null,2) : "";
+  $("viewer").hidden=false;
+  $("replayAnalysis").hidden=true;
+  $("downloadReplay").hidden=false;
+  $("exportStatus").hidden=true;
+  summarizeScenario();
+  if (C.video_url && rollover) {
+    $("sceneSummary").textContent+=" · 依翻覆範例重播，影片觀察請見和解資料";
+  } else if (C.video_url) {
+    $("sceneSummary").textContent+=" · 依整合後的事故經過產生示意";
+  }
+  if (C.video_url && !rollover && replayData.relative_crossing) {
+    const {reference_party, direction}=replayData.relative_crossing;
+    const [reference,moving]=reference_party==="A" ? ["甲方","乙方"] : ["乙方","甲方"];
+    $("sceneSummary").textContent+=` · 以${reference}行進方向為前方，${moving}由${direction==="left_to_right" ? "左往右" : "右往左"}橫越`;
+  } else if (C.video_url && !rollover && ["other","intersection"].includes(replayData.collision_type)) {
+    $("sceneSummary").textContent+=" · 橫越方向未確認，畫面為通用示意";
+  }
+  if (reconstruction) $("sceneSummary").textContent=`依影片估算 · 原點：${reconstruction.origin} · 尺度：${reconstruction.scale} · ${reconstruction.basis}`;
+  $("legendA").textContent = "甲方 · " + (replayData.party_a.vehicle || "類型未確認");
+  $("legendB").textContent = "乙方 · " + (replayData.party_b.vehicle || "類型未確認");
+  if (!reconstruction) draw(rollover ? "oncoming_rollover" : replayData.collision_type);
+  let animated=false;
+  try {
+    animated=window.Replay?.load(replayData)===true;
+  } catch (error) {
+    console.warn("無法開啟 3D 重播",error);
+  }
+  window.ReplayAnalysis.load(replayData,window.Replay,animated);
+  updateReviewAvailability();
+  ["r3d", "rv", "rplay", "rspeed", "rt", "replayTime"].forEach(id => $(id).hidden = !animated || (id==="rv" && !!reconstruction));
+  $("diagram").style.display = animated || reconstruction ? "none" : "block";
+  $("replayMode").textContent=animated ? "3D 場景" : reconstruction ? "參數重播" : "平面示意";
+  if (!animated) $("rcap").textContent = "3D 重播尚未可用，仍可查看事故資料與參數。";
+  else if (!rollover) $("rcap").textContent = "點擊播放／暫停 · 拖曳旋轉 · 滾輪縮放";
+}
+
+$("downloadReplay").onclick=async()=>{
+  const button=$("downloadReplay"), status=$("exportStatus");
+  if (!C || $("viewer").hidden) return;
+  button.disabled=true;
+  status.hidden=false;
+  status.textContent="正在打包可離線開啟的 HTML…";
+  try {
+    await downloadReplayHtml(C.id,replayDataForCase(C),document);
+    status.textContent="已產生 HTML，可離線開啟。";
+  } catch (error) {
+    status.textContent=error.message;
+  } finally {
+    button.disabled=false;
+  }
+};
+
+
+for (const [id, party] of [["av","party_a"],["bv","party_b"]]) {
+  $(id).onchange = () => {
+    C.data[party].vehicle = $(id).value;
+    refreshReplay();
+    updateSteps();
+  };
+}
+
+function rememberQuestions() {
+  for (const question of C.missing) questionHistory.set(question.key,question);
+  renderQ();
+}
+function renderQ() {
+  const box=$("qs");
+  box.replaceChildren();
+  const count=questionHistory.size;
+  $("qinfo").textContent=C.missing_total ? `還有 ${C.missing_total} 項待確認。資料齊全後會自動準備草稿。`
+    : count ? "可以補填、更正或清除已填答案。"
+    : "目前沒有待補充的問題，你仍可以到「核對內容」編輯案件。";
+  $("qsend").hidden=!count;
+  for(const q of questionHistory.values()) {
+    const group=document.createElement("div");
+    group.className="q";
+    const label=document.createElement("label");
+    label.textContent=q.question;
+    label.htmlFor="q_"+q.key;
+    const field=document.createElement(q.type==="choice"?"select":"input");
+    if(q.type==="choice") {
+      field.add(new Option("請選擇",""));
+      q.options.forEach(option=>field.add(new Option(option,option)));
+    }
+    field.id=label.htmlFor;
+    field.dataset.key=q.key;
+    field.value=savedAnswers[q.key]||"";
+    group.append(label,field);
+    box.append(group);
+  }
+}
+async function continueReview() {
+  if(sourceDirty()) { show(1); $("err").textContent="事故描述或影片有變更，請先分析事故。"; return; }
+  const answers=pendingAnswers();
+  if(Object.keys(answers).length) {
+    const edits=manualReview(), scenario=C.data.scenario;
+    C=await api("/api/cases/"+C.id+"/answers","POST",{answers});
+    Object.assign(savedAnswers,answers);
+    rememberQuestions();
+    analysisVersion++;
+    $("c1").checked=$("c2").checked=false;
+    const answerFields={time:"time",location:"loc",name_a:"an",plate_a:"ap",name_b:"bn",plate_b:"bp",damage:"dmg",amount:"amt",injured:"injsel"};
+    for (const key of Object.keys(answers)) delete edits[answerFields[key]];
+    enter3(edits,scenario);
+    if (C.missing_total) show(2);
+  } else {
+    show(3);
+  }
+}
+$("qsend").onclick=run($("qsend"),continueReview);
+$("qskip").onclick=run($("qskip"),continueReview);
+$("qskip").textContent="繼續到核對內容";
+
+$("s1").onclick=()=>show(1);
+$("s2").onclick=()=>show(2);
+$("s3").onclick=run($("s3"),continueReview);
+$("s4").onclick=()=>show(4);
+for(const id of ["p1","p2","p3"]) {
+  $(id).addEventListener("input",updateSteps);
+  $(id).addEventListener("change",updateSteps);
+}
+
+// ---- 步驟3:確認
+const INJ={yes:"有",no:"沒有",unknown:"不確定"};
+function fill(){const d=C.data;$("av").value=participantTypes.includes(d.party_a.vehicle)?d.party_a.vehicle:"";$("bv").value=participantTypes.includes(d.party_b.vehicle)?d.party_b.vehicle:"";$("time").value=d.time;$("loc").value=d.location;$("an").value=d.party_a.name;$("ap").value=d.party_a.plate;
+  $("bn").value=d.party_b.name;$("bp").value=d.party_b.plate;$("dmg").value=d.damage;$("amt").value=d.amount??"";$("injsel").value=INJ[d.injured];
+  $("reviewDescription").value=d.description;
+  $("reviewDescriptionBox").hidden=!!d.description.trim();
+  for (const [key,id] of Object.entries(settlementFields)) $(id).value=d.settlement?.[key] || "";
+  const f=d.fault_hint;
+  const hasFaultEstimate=[f.a_percent,f.b_percent].every(value=>Number.isFinite(value) && value>=0 && value<=100);
+  $("fp").textContent=hasFaultEstimate ? `甲 ${f.a_percent}% / 乙 ${f.b_percent}%` : "尚無法判定";
+  $("fc").textContent=hasFaultEstimate && f.confidence ? `信心：${f.confidence}` : "";
+  $("faultBar").hidden=!hasFaultEstimate;
+  $("ba").style.width=hasFaultEstimate ? f.a_percent+"%" : "";
+  $("bb").style.width=hasFaultEstimate ? f.b_percent+"%" : "";
+  const rs=$("reasons");rs.innerHTML="";f.reasons.forEach(r=>li(rs,r));
+  const ev=$("evi");ev.innerHTML="";d.evidence.forEach(e=>li(ev,"畫面觀察:"+e));
+  const fr=$("frames");fr.innerHTML="";C.frames.forEach(x=>{const fg=document.createElement("figure"),im=document.createElement("img"),c=document.createElement("figcaption");
+    im.src=x.url;im.alt=`影片第 ${x.t} 秒`;c.textContent=`第 ${x.t} 秒`;fg.append(im,c);fr.append(fg)});
+  $("noEvidence").hidden = Boolean(C.video_url || C.frames.length); $("framebox").style.display=C.frames.length?"block":"none";gate()}
+function collect(){const d=JSON.parse(JSON.stringify(C.data));Object.assign(d,{time:$("time").value,location:$("loc").value,damage:$("dmg").value,description:$("reviewDescription").value.trim(),
+  amount:$("amt").value.trim()==="" ? null : $("amt").value,injured:{"有":"yes","沒有":"no","不確定":"unknown"}[$("injsel").value]});
+  d.settlement=Object.fromEntries(Object.entries(settlementFields)
+    .filter(([key])=>Number(d.amount)>0 || !["payer","payment_details"].includes(key))
+    .map(([key,id])=>[key,$(id).value.trim()]));
+  Object.assign(d.party_a,{name:$("an").value,plate:$("ap").value,vehicle:$("av").value});Object.assign(d.party_b,{name:$("bn").value,plate:$("bp").value,vehicle:$("bv").value});return d}
+function reviewBlockers() {
+  const fields = [
+    ["time","填寫事故時間"], ["loc","填寫事故地點"],
+    ["an","填寫甲方姓名"], ["ap","填寫甲方車牌",$("av").value==="行人"],
+    ["bn","填寫乙方姓名"], ["bp","填寫乙方車牌",$("bv").value==="行人"],
+    ["dmg","填寫車輛損害，無損害可填「無」"],
+    ["reviewDescription","填寫事故經過"],
+  ];
+  const issues = fields.filter(([id,,exempt])=>!exempt && !$(id).value.trim());
+  if (!["有","沒有"].includes($("injsel").value)) issues.push(["injsel","人員受傷目前為「不確定」，請確認後選擇「有」或「沒有」"]);
+  if (!/^\d+$/.test($("amt").value.trim())) issues.push(["amt","填寫非負整數的和解金額，互不請求請填 0"]);
+  if (Number($("amt").value)>0) {
+    if (!$("settlementPayer").value) issues.push(["settlementPayer","選擇哪一方付款"]);
+    if (!$("settlementPaymentDetails").value.trim()) issues.push(["settlementPaymentDetails","填寫付款方式與期限"]);
+  }
+  return issues;
+}
+function gate(){const inj=$("injsel").value=="有";$("inj").style.display=inj?"block":"none";
+  $("settlementPayment").hidden=!(Number($("amt").value)>0);
+  const issues=C ? reviewBlockers() : [];
+  const list=$("draftMissing");
+  list.hidden=!issues.length;
+  list.replaceChildren(...issues.map(([id,message])=>{
+    const item=document.createElement("li");
+    const link=document.createElement("a");
+    link.href=`#${id}`;
+    link.textContent=message;
+    link.onclick=event=>{
+      event.preventDefault();
+      $(id).focus();
+    };
+    item.append(link);
+    return item;
+  }));
+  const missingIds=new Set(issues.map(([id])=>id));
+  for (const id of ["time","loc","an","ap","bn","bp","dmg","reviewDescription","injsel","amt","settlementPayer","settlementPaymentDetails"]) {
+    if (missingIds.has(id)) {
+      $(id).setAttribute("aria-invalid","true");
+      $(id).style.outline="1px solid #be3030";
+    } else {
+      $(id).removeAttribute("aria-invalid");
+      $(id).style.outline="";
+    }
+  }
+  const dirty=!!C && savedReviewSnapshot!==pdfValues();
+  const sourceChanged=sourceDirty(), answersChanged=Object.keys(pendingAnswers()).length>0;
+  const upstream=sourceChanged || answersChanged;
+  const failed=C?.agent_state==="draft_failed";
+  const ready=!issues.length && !dirty && !upstream && ["awaiting_review","approved"].includes(C?.agent_state);
+  $("draftApproval").hidden=!ready;
+  $("c2box").hidden=!inj;
+  $("draftPreview").hidden=!ready || !C?.draft_url;
+  $("saveReview").hidden=!C || upstream || (!dirty && !failed && (issues.length || C.agent_state!=="needs_answers"));
+  $("saveReview").disabled=busy;
+  $("saveReview").textContent=failed && !dirty ? "重試產生草稿" : "儲存修改";
+  $("draftStatus").textContent=sourceChanged ? "請回到事故描述與影片，重新分析變更的資料。"
+    : answersChanged ? "請回到補問，送出尚未儲存的回答。"
+    : issues.length ? (dirty ? "可以先儲存修改。補齊下列項目後才能產生草稿。" : "補齊下列項目後儲存，即可產生草稿。")
+    : dirty || C?.agent_state==="needs_answers" ? "必填資料已齊，請儲存修改以產生草稿。"
+    : failed ? "草稿產生失敗。可以重試。"
+    : ready && !$("c1").checked ? "草稿已準備好，請勾選「我已逐項核對以上內容」。"
+    : ready && inj && !$("c2").checked ? "請完成受傷處理確認，才能繼續。"
+    : ready ? "可以確認文件並寄出邀請。" : "";
+  const signingEnabled=C?.signing_enabled!==false;
+  $("signRecipients").hidden=!signingEnabled;
+  $("mk").hidden=!signingEnabled;
+  $("c1").closest(".chk").hidden=!signingEnabled;
+  if (!signingEnabled) {
+    $("c2box").hidden=true;
+    if (ready) $("draftStatus").textContent="公開展示版可預覽 PDF，寄信與送簽暫停。";
+    return;
+  }
+  const previewed=ready && previewedRevision===C.revision;
+  if (ready && !previewed) $("draftStatus").textContent="請先預覽這一版 PDF，再確認送簽。";
+  $("c1").disabled=!previewed;
+  const [emailA,emailB]=signingEmails();
+  const validEmail=email=>/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const sameEmail=!!emailA && emailA.toLowerCase()===emailB.toLowerCase();
+  const invalidA=!validEmail(emailA) || sameEmail;
+  const invalidB=!validEmail(emailB) || sameEmail;
+  $("recipientEmailError").hidden=!sameEmail;
+  for (const [id,email,invalid] of [["emailA",emailA,invalidA],["emailB",emailB,invalidB]]) {
+    if (email && invalid) $(id).setAttribute("aria-invalid","true");
+    else $(id).removeAttribute("aria-invalid");
+  }
+  if (ready && !sameEmail && (invalidA || invalidB)) $("draftStatus").textContent="請填寫甲乙雙方不同且有效的 Email，再確認送簽。";
+  if (!busy) $("mk").textContent="確認文件並寄出邀請";
+  $("mk").disabled=busy || invalidA || invalidB || !(previewed&&$("c1").checked&&(!inj||$("c2").checked));
+}
+$("c1").onchange=()=>{approvedSnapshot=$("c1").checked ? approvalValues() : null; gate();};
+["c2","injsel"].forEach(id=>$(id).onchange=gate);
+$("draftPreview").onclick=run($("draftPreview"),async()=>{
+  const preview=window.open("about:blank","_blank");
+  if (!preview) throw new Error("請允許開啟新分頁後再預覽。");
+  preview.opener=null;
+  try {
+    const revision=C.revision;
+    const blob=await api(C.draft_url,"GET",null,undefined,{pdf:true});
+    const url=URL.createObjectURL(blob);
+    preview.location.replace(url);
+    previewedRevision=revision;
+    const timer=setInterval(()=>{
+      if (preview.closed) { clearInterval(timer); URL.revokeObjectURL(url); }
+    }, 3000);
+  } catch (error) {
+    preview.close();
+    throw error;
+  }
+});
+$("saveReview").onclick=run($("saveReview"),async()=>{
+  const previousRevision=C.revision;
+  C=await api("/api/cases/"+C.id,"PUT",collect());
+  if (C.revision!==previousRevision) pdfSnapshot=null;
+  $("c1").checked=$("c2").checked=false;
+  rememberQuestions();
+  enter3();
+});
+$("mk").onclick=run($("mk"),async()=>{
+  if (sourceDirty() || Object.keys(pendingAnswers()).length) {
+    show(sourceDirty()?1:2);
+    $("err").textContent="請先完成前一步的修改，再產生和解書。";
+    return;
+  }
+  const snapshot=pdfValues();
+  const [email_a,email_b]=signingEmails();
+  const r=await api("/api/cases/"+C.id+"/pdf","POST",{revision:C.revision,confirmed:$("c1").checked,injured_ack:$("c2").checked,email_a,email_b});
+  C.agent_state="approved";
+  pdfSnapshot=snapshot;
+  const owner=caseCredentials.get(C.id);
+  $("ownerProgress").href="/signing-status.html?revision="+encodeURIComponent(C.revision)+"#"+owner;
+  const failed=r.delivery_failed.map(role=>role==="A" ? "甲方" : "乙方");
+  $("ownerLinkStatus").textContent="";
+  $("dispatchStatus").textContent=failed.length
+    ? failed.join("、")+"邀請未能寄出。可在進度頁補寄。"
+    : "已寄出甲乙雙方簽署邀請。";
+  show(4);
+});
+$("copyOwnerLink").onclick=async()=>{
+  const link=$("ownerProgress").href;
+  try {
+    await navigator.clipboard.writeText(link);
+    $("ownerLinkStatus").textContent="已複製發起人連結。";
+  } catch {
+    window.prompt("請複製並私下保管發起人連結。",link);
+  }
+};
+function car(x,y,color,party,rot=0,type=(party === "甲" ? C.data.party_a : C.data.party_b).vehicle) {
+  const silhouettes = {
+    "汽車": '<rect x="-24" y="-10" width="48" height="20" rx="6" fill="currentColor"/><rect x="-8" y="-8" width="16" height="16" rx="3" fill="#28394d"/>',
+    "行人": '<ellipse rx="7" ry="11" fill="currentColor"/><circle cx="3" r="5" fill="#f4c5a4"/>',
+    "機車": '<rect x="-15" y="-3" width="30" height="6" rx="3" fill="#253040"/><rect x="-9" y="-5" width="17" height="10" rx="4" fill="currentColor"/>',
+    "自行車": '<path d="M-15 0H15M7-5V5" stroke="#1b2634" stroke-width="4"/><circle r="5" fill="currentColor"/>',
+    "公車": '<rect x="-35" y="-11" width="70" height="22" rx="4" fill="currentColor"/><path d="M-27-8H27M-27 8H27M27-8V8" stroke="#28394d" stroke-width="3"/>',
+    "貨車": '<rect x="-30" y="-11" width="43" height="22" rx="2" fill="currentColor"/><rect x="14" y="-10" width="16" height="20" rx="4" fill="#28394d"/>'
+  };
+  const shape = silhouettes[type] || '<circle r="7" fill="currentColor"/>';
+  return '<g transform="translate('+x+' '+y+')"><g transform="rotate('+rot+')" style="color:'+color+'">'+shape+'</g><text y="-14" font-size="11" text-anchor="middle" fill="#fff">'+party+'</text></g>';
+}
+function draw(t){const aBehind = ["A","B"].includes(C.data.maneuver_party) ? C.data.maneuver_party==="A" : C.data.fault_hint.a_percent > C.data.fault_hint.b_percent;let s='<rect width="320" height="150" fill="#6b7078"/><path d="M0 75H320" stroke="#fff" stroke-dasharray="14 10" stroke-width="2"/>';
+ if(t=="rear_end")s+=car(aBehind ? 120 : 190,100,"#2457d6","甲")+car(aBehind ? 190 : 120,100,"#c0711a","乙")+'<path d="M80 100H98" stroke="#fff" stroke-width="3"/>';
+ else if(t=="oncoming_rollover")s='<rect width="320" height="150" fill="#6b7078"/><path d="M0 73H320M0 77H320" stroke="#e9af54" stroke-width="1.5"/>'+car(85,105,"#2457d6","甲",0,"汽車")+car(235,45,"#c0711a","乙",180,"汽車");
+ else if(t=="lane_change")s+=car(170,110,"#2457d6","甲")+car(130,55,"#c0711a","乙",18);
+ else if(t=="intersection")s='<rect width="320" height="150" fill="#6b7078"/><rect x="130" y="0" width="60" height="150" fill="#555b63"/><rect x="0" y="45" width="320" height="60" fill="#555b63"/>'+car(100,75,"#2457d6","甲")+car(160,30,"#c0711a","乙",90);
+ else s+=car(120,100,"#2457d6","甲")+car(200,50,"#c0711a","乙");$("diagram").innerHTML=s}
+
+fetch("/api/mode").then(response=>response.json()).then(mode=>{
+  $("glowsVideoNotice").hidden=!mode.glows_yolo_configured;
+}).catch(()=>{});
+import(document.querySelector("script[type=importmap]").dataset.replayModule).catch(async error=>{
+  console.warn("電影光影模組無法載入，改用基本重播",error);
+  const loadScript=src=>new Promise((resolve,reject)=>{
+    const script=document.createElement("script");
+    script.src=src;
+    script.onload=resolve;
+    script.onerror=reject;
+    document.head.append(script);
+  });
+  await loadScript("https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js").catch(()=>{});
+  await loadScript("/replay.js?v=5");
+}).then(()=>{ if (C && reviewReady) refreshReplay(); }).catch(error=>console.warn("重播載入失敗",error));
+</script></body></html>

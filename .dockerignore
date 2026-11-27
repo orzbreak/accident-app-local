@@ -1,0 +1,9 @@
+.env
+.env.*
+data/
+logs/
+venv/
+.git/
+__pycache__/
+**/__pycache__/
+*.zip

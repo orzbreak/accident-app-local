@@ -1,0 +1,10 @@
+fastapi
+uvicorn[standard]
+python-multipart
+requests
+reportlab
+opencv-python-headless
+python-dotenv
+
+pypdf>=5
+Pillow
