@@ -29,6 +29,7 @@ BASE = os.path.dirname(os.path.abspath(__file__))
 DATA = os.path.abspath(os.getenv("ACCIDENT_DATA_DIR") or os.path.join(BASE, "data"))
 os.makedirs(DATA, exist_ok=True)
 FREE_PREVIEW = os.getenv("ACCIDENT_FREE_PREVIEW") == "1"
+DOTTEDSIGN_ONLY = FREE_PREVIEW and dottedsign.configured() and dottedsign.environment() == "sandbox"
 MAX_VIDEO = 200 * 1024 * 1024
 MAX_VIDEOS = 1
 @asynccontextmanager
@@ -65,6 +66,7 @@ class PdfReq(BaseModel):
     injured_ack: bool = False         # 有人受傷時,另需確認已報警/就醫
     email_a: str = ""
     email_b: str = ""
+    use_dottedsign: bool = False
 
 
 class Signature(BaseModel):
@@ -123,8 +125,10 @@ def public(c, *, created=False):
             "yolo_url": f"/api/cases/{c['id']}/yolo-video" if c.get("yolo_path") else None,
             "yolo_error": c.get("yolo_error"),
             "video_errors": c.get("video_errors", []),
+            "summary_warning": c.get("summary_warning"),
             "frames": [{"url": f"/api/cases/{c['id']}/frame/{i}", "t": f["t"]} for i, f in enumerate(c["frames"])],
-            "status": c["status"], "signing_enabled": not FREE_PREVIEW,
+            "status": c["status"], "signing_enabled": not FREE_PREVIEW or DOTTEDSIGN_ONLY,
+            "dottedsign_only": DOTTEDSIGN_ONLY,
             **({"owner_token": c["owner_token"]} if created else {})}
 
 
@@ -264,7 +268,7 @@ def complete_analysis(cid, text, videos, progress=None, location=""):
     yolo_path = yolo_error = None
     with ThreadPoolExecutor(max_workers=1) as worker:
         detection = None
-        auto_gpu = glows_lifecycle.enabled() and not FREE_PREVIEW
+        auto_gpu = glows_lifecycle.enabled() and glows_lifecycle.configured()
         if videos and auto_gpu:
             detection = worker.submit(glows_lifecycle.detect, videos[0]["path"], DATA, glows_yolo.infer)
         elif videos and glows_yolo.configured() and not glows_lifecycle.enabled():
@@ -277,7 +281,7 @@ def complete_analysis(cid, text, videos, progress=None, location=""):
                 yolo_path = detection.result()
             except ValueError as exc:
                 yolo_error = str(exc)
-                logger.warning("Glows.ai inference failed for case %s", cid)
+                logger.warning("Glows.ai inference failed for case %s: %s", cid, yolo_error)
     if videos and not descriptions and not (yolo_path and (text.strip() or location)):
         raise ValueError("影片事故經過未能完成分析。 " + " ".join(errors))
     if progress:
@@ -460,8 +464,8 @@ def yolo_video(cid: str, request: Request):
 @app.post("/api/cases/{cid}/pdf")
 @case_locked
 def make_pdf(cid: str, r: PdfReq, request: Request):
-    if FREE_PREVIEW:
-        raise HTTPException(403, "公開展示版暫停寄信與送簽")
+    if FREE_PREVIEW and not (DOTTEDSIGN_ONLY and r.use_dottedsign):
+        raise HTTPException(403, "公開展示版僅支援 DottedSign Sandbox 送簽")
     c = get_case(cid)
     require_owner(c, request)
     if not r.confirmed:
@@ -476,20 +480,56 @@ def make_pdf(cid: str, r: PdfReq, request: Request):
         raise HTTPException(409, "請先補齊和解資料並重新核對草稿")
     if c["data"]["injured"] == "yes" and not r.injured_ack:
         raise HTTPException(400, "有人受傷時,請先確認已報警/就醫")
-    if signing_record(c):
-        raise HTTPException(409, "此版本已有 DottedSign 送簽紀錄")
     emails = tuple(email.strip() for email in (r.email_a, r.email_b))
     if any(len(email) > 254 or not dottedsign.EMAIL.fullmatch(email) for email in emails):
         raise HTTPException(422, "請填寫甲乙雙方有效的電子郵件")
     if emails[0].casefold() == emails[1].casefold():
         raise HTTPException(422, "甲乙雙方請使用不同的電子郵件")
-    mailer = signing.Mailer()
-    SIGNING.create(cid, c["revision"], signing.digest(c["owner_token"]),
-                   Path(draft_path(c)).read_bytes(), c["signature_page"], emails,
-                   replay=json.dumps(signing_replay(c), ensure_ascii=False))
+    record = signing_record(c)
+    if not r.use_dottedsign:
+        if record:
+            raise HTTPException(409, "此版本已有 DottedSign 任務，請維持原簽署方式")
+        mailer = signing.Mailer()
+        SIGNING.create(cid, c["revision"], signing.digest(c["owner_token"]),
+                       Path(draft_path(c)).read_bytes(), c["signature_page"], emails,
+                       replay=json.dumps(signing_replay(c), ensure_ascii=False))
+        c["agent_state"] = "approved"
+        return {"provider": "local", "delivery_failed": deliver_invitations(cid, c["revision"], mailer)}
+    if SIGNING.has_document(cid, c["revision"]):
+        raise HTTPException(409, "此版本已有自建簽署任務，請維持原簽署方式")
+    if not dottedsign.configured():
+        raise HTTPException(503, "請在本機 .env 設定 DOTTEDSIGN_CLIENT_ID 與 DOTTEDSIGN_CLIENT_SECRET")
+    if dottedsign.environment() != "sandbox":
+        raise HTTPException(503, "本機送簽目前使用 DottedSign Sandbox，請設定 DOTTEDSIGN_ENV=sandbox")
+    email_digest = signing.digest("\n".join(email.casefold() for email in emails))
+    if record and (record["environment"] != "sandbox" or record.get("email_digest") != email_digest):
+        raise HTTPException(409, "此版本已有送簽紀錄，請使用原信箱或另開案件")
+    try:
+        client = dottedsign.Client()
+        if record is None:
+            boxes = compdf.signature_boxes(Path(draft_path(c)).read_bytes())
+            task_id = client.create_task(
+                draft_path(c), "交通事故和解書.pdf", zip(("甲方", "乙方"), emails),
+                (boxes["A"], boxes["B"]), signature_page=c["signature_page"],
+            )
+            record = {"task_id": task_id, "environment": "sandbox", "email_digest": email_digest}
+            path = signing_record_path(c)
+            temporary = path.with_suffix(".tmp")
+            temporary.write_text(json.dumps(record), encoding="utf-8")
+            temporary.replace(path)
+            status = "draft"
+        else:
+            status = client.get_task(record["task_id"])["status"]
+        if status == "draft":
+            client.start_task(record["task_id"])
+        elif status not in ("waiting", "completed"):
+            raise HTTPException(409, "此 DottedSign 任務已結束，請另開案件送簽")
+    except (dottedsign.ServiceError, ValueError, KeyError) as exc:
+        logger.warning("DottedSign dispatch failed for case %s (%s)", cid,
+                       str(exc) if isinstance(exc, dottedsign.ServiceError) else type(exc).__name__)
+        raise HTTPException(502, "DottedSign 暫時無法送簽，請檢查 Sandbox 設定後再試") from exc
     c["agent_state"] = "approved"
-    failed = deliver_invitations(cid, c["revision"], mailer)
-    return {"delivery_failed": failed}
+    return {"provider": "dottedsign", "task_id": record["task_id"]}
 
 
 def deliver_invitations(cid, revision, mailer):
@@ -612,7 +652,17 @@ def signing_status(cid: str, revision: str, request: Request):
             c["status"] = "signed"
     except (dottedsign.ServiceError, ValueError, KeyError) as exc:
         raise HTTPException(502, "暫時無法取得 DottedSign 簽署結果，請再試一次") from exc
-    return {"status": status, "signed_pdf_url": f"/api/cases/{cid}/file" if c["status"] == "signed" else None}
+    return {"status": status, "task_id": record["task_id"], "signed_pdf_url": f"/api/cases/{cid}/file" if c["status"] == "signed" else None}
+
+
+@app.get("/api/cases/{cid}/signing-replay")
+@case_locked
+def dottedsign_replay(cid: str, revision: str, request: Request):
+    c = get_case(cid)
+    require_owner(c, request)
+    if revision != c["revision"] or not signing_record(c):
+        raise HTTPException(404, "找不到此送簽版本的重播資料")
+    return JSONResponse(signing_replay(c), headers=PRIVATE_PDF)
 
 
 @app.get("/api/cases/{cid}/file")
@@ -623,7 +673,7 @@ def file(cid: str, request: Request):
     p = os.path.join(DATA, f"{cid}{'_signed' if c['status'] == 'signed' else ''}.pdf")
     if c["status"] == "draft" or not os.path.exists(p):
         raise HTTPException(404, "尚未產生")
-    return FileResponse(p, media_type="application/pdf")
+    return FileResponse(p, media_type="application/pdf", headers=PRIVATE_PDF)
 
 
 app.mount("/", StaticFiles(directory=os.path.join(BASE, "static"), html=True))
