@@ -14,6 +14,8 @@
 
 每案可上傳一支影片，上限 200 MB。App 將原片送給 Gemini，並整合影片觀察及使用者敘述。輸出包含可確認的共同座標系、物件 XYZ、姿態弧度與號誌位置和實際燈色。重播預設循環，可展開查看 3D 座標與來源依據。無法確定三維位置時保留文字敘述與原片供核對。
 
+若已取得影片觀察但事故摘要 API 暫時失敗，仍可到核對頁查看原始影片與觀察結果。YOLO 失敗時會顯示出錯階段。
+
 ## 站內送簽
 
 在伺服器的 .env 設定以下項目，再重啟 App。
@@ -34,7 +36,13 @@
 3. 發起人可從進度頁補寄未送達或已過期的邀請，查看各方的確認簽署時間。雙方完成後，可下載已簽 PDF。請私下保存發起人連結，以便重啟服務後繼續查詢。
 4. 儲存文件修改會撤銷舊版尚未完成的邀請。新版需再次預覽與送簽。已完成的舊版仍可從原發起人連結下載。
 
-送簽文件、邀請及簽署紀錄儲存在 data/signing.sqlite3。部署時請使用持久磁碟與 SQLite 相容的備份方式，並限制資料庫檔案的存取。事故分析及可編輯草稿仍隨單一 App 程序重啟清除，已送簽版本仍可完成簽署或由發起人查詢。保留的 DottedSign API 僅用於查詢既有 DottedSign 紀錄，新送簽使用上述流程。
+送簽文件、邀請及簽署紀錄儲存在 data/signing.sqlite3。部署時請使用持久磁碟與 SQLite 相容的備份方式，並限制資料庫檔案的存取。事故分析及可編輯草稿仍隨單一 App 程序重啟清除，已送簽版本仍可完成簽署或由發起人查詢。
+
+### 選用 DottedSign Sandbox
+
+預設使用上面的站內簽署。發起人預覽 PDF 後，可勾選「使用 DottedSign Sandbox 送簽」，由 DottedSign 建立並寄出測試簽署邀請。App 顯示整份文件的進度，個別簽署狀態可在 DottedSign 查看，雙方完成後可在 App 下載已簽 PDF。
+
+在本機 `.env` 設定 `DOTTEDSIGN_ENV=sandbox`、`DOTTEDSIGN_CLIENT_ID` 和 `DOTTEDSIGN_CLIENT_SECRET`。應用程式權限需勾選 `sign_tasks.general.write`、`sign_tasks.general.read`、`sign_tasks.download.read`。請使用虛構案件與測試信箱，憑證留在本機設定。
 
 ## Glows.ai YOLO 影片偵測
 
@@ -63,7 +71,7 @@ Windows 本機也可用 `GLOWS_YOLO_SSH_BOOTSTRAP=1`，並選擇 `img-nrpy8bl6` 
 
 ## ComPDF 雲端產製
 
-在服務環境設定 `COMPDF_API_KEY` 並重啟後，新產生的和解書會優先透過 ComPDF 將正文轉成 PDF。簽名頁與事故附件由本機加上。未設定金鑰或轉檔失敗時，整份和解書會由本機產生。`/api/mode` 的 `compdf_configured` 表示金鑰是否已設定，`compdf` 表示最近一次 PDF 產製使用的引擎。
+在服務環境設定 `COMPDF_API_KEY` 並重啟後，新產生的和解書會優先透過 ComPDF 將正文轉成 PDF。簽名欄接在正文後方，空間不足時換頁，事故摘要另列附件。未設定金鑰、轉檔失敗或無法定位簽名欄時，整份和解書會由本機產生。`/api/mode` 的 `compdf_configured` 表示金鑰是否已設定，`compdf` 表示最近一次 PDF 產製使用的引擎。
 
 ## 事故地點
 
