@@ -169,7 +169,13 @@ def run(source, data_dir, infer):
                 envs="GLOWS_YOLO_TOKEN=" + worker_token,
                 ports=json.dumps([{"port": PORT, "protocol": 2}]),
             )
-        sdk("POST", token, json=body)
+        try:
+            sdk("POST", token, json=body)
+        except requests.HTTPError as exc:
+            status = exc.response.status_code if exc.response is not None else "未知"
+            raise ValueError(f"Glows.ai GPU 建立請求失敗（HTTP {status}）。") from exc
+        except (ValueError, requests.RequestException) as exc:
+            raise ValueError(f"Glows.ai GPU 建立請求失敗（{type(exc).__name__}）。") from exc
         startup_deadline = min(deadline, time.monotonic() + 180)
         worker = wait_for_worker(token, key, worker_token, startup_deadline, ssh_bootstrap)
         if ssh_bootstrap:

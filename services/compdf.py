@@ -14,10 +14,16 @@ import glob, os
 # 優先嵌入 fonts/ 內的 TTF(例如 NotoSansTC-Regular.ttf),確保任何閱讀器都不缺字;
 # 找不到時退回內建 CID 字型(需要閱讀器有中文字型)。
 _ttf = os.getenv("PDF_FONT") or next(iter(glob.glob(os.path.join(os.path.dirname(__file__), "..", "fonts", "*.ttf"))), None)
+if not _ttf and os.name == "nt":
+    windows_font = os.path.join(os.environ.get("WINDIR", r"C:\Windows"), "Fonts", "msjh.ttc")
+    if os.path.isfile(windows_font):
+        _ttf = windows_font
 if _ttf:
     pdfmetrics.registerFont(TTFont("CJK", _ttf)); FONT = "CJK"
 else:
     pdfmetrics.registerFont(UnicodeCIDFont("MSung-Light")); FONT = "MSung-Light"
+SIGNATURE_MARKER = "https://example.invalid/settlement-signature-slot"
+SIGNATURE_Y_KEY = "/SettlementSignatureY"
 SIG_BOX = {"A": (60, 150, 220, 70), "B": (315, 150, 220, 70)}   # x, y, w, h
 
 
@@ -87,8 +93,15 @@ def _wrap(c, text, x, y, width, size=11, lead=17):
     return y
 
 
+def signature_boxes(pdf: bytes):
+    metadata = PdfReader(io.BytesIO(pdf)).metadata or {}
+    base_y = float(metadata.get(SIGNATURE_Y_KEY, SIG_BOX["A"][1]))
+    return {role: (x, base_y, width, height) for role, (x, _, width, height) in SIG_BOX.items()}
+
+
 def _build_local(case: dict, path: str, sigs: dict | None = None, frames: list | None = None, *, draft=False):
-    c = canvas.Canvas(path, pagesize=A4)
+    buffer = io.BytesIO()
+    c = canvas.Canvas(buffer, pagesize=A4)
     W, H = A4
     title = "道路交通事故和解書（待確認草稿）" if draft else "道路交通事故和解書"
     c.setFillColorRGB(.10, .16, .24)
@@ -117,11 +130,11 @@ def _build_local(case: dict, path: str, sigs: dict | None = None, frames: list |
         y -= 24
 
     for heading, rows in agreement_sections(case):
-        if y < 308:
+        if y < 105:
             continuation()
         section_heading(heading)
         for label, value in rows:
-            if y < 270:
+            if y < 60:
                 continuation()
                 section_heading(heading + "（續）")
             c.setFillColorRGB(.26, .33, .42)
@@ -133,7 +146,7 @@ def _build_local(case: dict, path: str, sigs: dict | None = None, frames: list |
             for ch in (value or "（待補）") + "\n":
                 if ch == "\n" or (ch not in "，。；：！？、）」』" and
                                    c.stringWidth(line + ch, FONT, font_size) > W - 222):
-                    if y < 270:
+                    if y < 60:
                         continuation()
                         section_heading(heading + "（續）")
                         c.setFont(FONT, font_size)
@@ -145,20 +158,28 @@ def _build_local(case: dict, path: str, sigs: dict | None = None, frames: list |
             c.setFont(FONT, 11)
             y -= 2
         y -= 4
-    _signature_page(c, case, sigs)
+    if y < 170:
+        continuation()
+    signature_y = y - 110
+    _signature_page(c, case, sigs, signature_y)
     _attachment_page(c, case, frames or [])
     c.save()
+    writer = PdfWriter(clone_from=PdfReader(buffer))
+    writer.add_metadata({SIGNATURE_Y_KEY: str(signature_y)})
+    with open(path, "wb") as output:
+        writer.write(output)
     return page
 
 
-def _signature_page(c, case, sigs):
+def _signature_page(c, case, sigs, base_y):
     W, _ = A4
     c.setFont(FONT, 11)
     c.setStrokeColorRGB(.66, .72, .78)
-    c.line(60, 255, W - 60, 255)
+    c.line(60, base_y + 105, W - 60, base_y + 105)
     c.setFillColorRGB(.10, .16, .24)
-    c.drawString(60, 241, "五、立書與簽署")
-    for k, (x, by, w, h) in SIG_BOX.items():
+    c.drawString(60, base_y + 91, "五、立書與簽署")
+    for k, (x, _, w, h) in SIG_BOX.items():
+        by = base_y
         c.rect(x, by, w, h)
         party = case["party_a" if k == "A" else "party_b"]
         caption = f"{'甲' if k == 'A' else '乙'}方簽名　{party['name']}"
@@ -169,7 +190,7 @@ def _signature_page(c, case, sigs):
             img = ImageReader(io.BytesIO(base64.b64decode(sigs[k].split(",")[-1])))
             c.drawImage(img, x + 4, by + 4, w - 8, h - 8, mask="auto", preserveAspectRatio=True)
     c.setFont(FONT, 9)
-    c.drawString(60, 125, f"文件產出日期　{date.today():%Y年%m月%d日}　　雙方簽署日期以簽署紀錄為準。")
+    c.drawString(60, base_y - 25, f"文件產出日期　{date.today():%Y年%m月%d日}　　雙方簽署日期以簽署紀錄為準。")
     c.showPage()
 
 
@@ -235,10 +256,12 @@ section{{margin-bottom:9px}}
 table{{width:100%;border-collapse:collapse}} th{{width:96px;text-align:left;vertical-align:top;padding:3px 0;color:#42546b}} td{{padding:3px 0}}
 .payment td{{font-size:14px;font-weight:700}}
 td{{white-space:pre-wrap;overflow-wrap:anywhere}}
+a.signature-slot{{display:block;height:184px;break-inside:avoid;page-break-inside:avoid;color:white;text-decoration:none}}
 @page{{size:A4}}
 </style></head><body>
 <h1>道路交通事故和解書</h1>
 {sections}
+<a class="signature-slot" href="{SIGNATURE_MARKER}">&nbsp;</a>
 </body></html>"""
 
 
@@ -271,16 +294,29 @@ def build_pdf(case: dict, path: str, sigs: dict | None = None, frames: list | No
         try:
             writer = PdfWriter()
             writer.append(PdfReader(io.BytesIO(_compdf_generate(_html_doc(case)))), import_outline=False)
-            signature_page = len(writer.pages)
-            if not signature_page:
-                raise ValueError("ComPDF 回傳空白文件")
+            signature_page = len(writer.pages) - 1
+            page = writer.pages[signature_page]
+            annotations = page.get("/Annots")
+            for ref in annotations or ():
+                annotation = ref.get_object()
+                if annotation.get("/A", {}).get("/URI") == SIGNATURE_MARKER:
+                    _, bottom, _, top = map(float, annotation["/Rect"])
+                    if top - bottom < 130 or top < 151:
+                        raise ValueError("ComPDF signature slot is too small")
+                    signature_y = top - 105
+                    annotations.remove(ref)
+                    break
+            else:
+                raise ValueError("ComPDF signature slot missing")
             pages = io.BytesIO()
             local = canvas.Canvas(pages, pagesize=A4)
-            _signature_page(local, case, sigs)
+            _signature_page(local, case, sigs, signature_y)
             _attachment_page(local, case, frames or [])
             local.save()
-            pages.seek(0)
-            writer.append(PdfReader(pages), import_outline=False)
+            overlays = PdfReader(pages)
+            page.merge_page(overlays.pages[0])
+            writer.append(overlays, pages=(1, len(overlays.pages)), import_outline=False)
+            writer.add_metadata({SIGNATURE_Y_KEY: str(signature_y)})
             with open(path, "wb") as out:
                 writer.write(out)
             ENGINE = "compdf"

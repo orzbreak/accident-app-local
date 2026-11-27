@@ -21,7 +21,7 @@ from pypdf import PdfReader, PdfWriter
 from reportlab.lib.utils import ImageReader
 from reportlab.pdfgen.canvas import Canvas
 
-from services.compdf import SIG_BOX
+from services.compdf import signature_boxes
 
 INVITE_TTL = 7 * 86400
 CODE_TTL = 600
@@ -106,6 +106,12 @@ class Store:
                 UPDATE documents SET superseded = ?
                 WHERE case_id = ? AND revision = ? AND superseded IS NULL
             """, (int(time.time()), cid, revision))
+
+    def has_document(self, cid, revision):
+        with self.transaction() as db:
+            return db.execute(
+                "SELECT 1 FROM documents WHERE case_id = ? AND revision = ?", (cid, revision)
+            ).fetchone() is not None
 
     def create(self, cid, revision, owner, pdf, page, emails, replay=None):
         with self.transaction(write=True) as db:
@@ -276,8 +282,9 @@ def signed_pdf(document, signatures):
     page = writer.pages[document["signature_page"]]
     buffer = io.BytesIO()
     overlay = Canvas(buffer, pagesize=(float(page.mediabox.width), float(page.mediabox.height)))
+    boxes = signature_boxes(document["pdf"])
     for row in signatures:
-        x, y, w, h = SIG_BOX[row["role"]]
+        x, y, w, h = boxes[row["role"]]
         overlay.drawImage(ImageReader(io.BytesIO(row["image"])), x + 4, y + 4, w - 8, h - 8,
                           mask="auto", preserveAspectRatio=True)
     overlay.save()

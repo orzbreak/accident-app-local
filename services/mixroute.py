@@ -59,6 +59,10 @@ def aftermath_only(video_description):
     return first_line == "影片涵蓋：僅事後"
 
 
+class SummaryUnavailable(ValueError):
+    pass
+
+
 def analyze(text, video_description=""):
     if model_configured():
         try:
@@ -107,7 +111,7 @@ states 只收錄畫面可確認的時間區間與 color（紅燈、黃燈、綠�
             else:
                 logger.warning("Case summary failed (%s)", type(exc).__name__)
             if video_description:
-                raise ValueError("已取得影片事發經過，但整合事故經過時失敗，請稍後重試。") from exc
+                raise SummaryUnavailable("已取得影片事發經過，但整合事故經過時失敗，請稍後重試。") from exc
     return mock_analyze(text)
 
 
@@ -330,13 +334,27 @@ def reanalyze(case):
         if k == "description" or k.startswith("x_"):
             parts.append(f"補充({case['qtext'].get(k, k)}):{v}")
     text = "\n".join(p for p in parts if p).strip()
+    previous_summary_warning = case.pop("summary_warning", None)
     if case.get("demo"):
         d = mock_analyze(text)
     else:
-        d = analyze(text, case.get("video_description", ""))
+        video_description = case.get("video_description", "")
+        try:
+            d = analyze(text, video_description)
+        except SummaryUnavailable:
+            case["summary_warning"] = "事故摘要服務暫時無法整合。已保留原始陳述與影片觀察，請核對並補充。"
+            if case.get("data") and not previous_summary_warning:
+                d = case["data"].copy()
+            else:
+                d = normalize({
+                    "description": text or video_description,
+                    "evidence": [video_description],
+                    "fault_hint": {"a_percent": None, "b_percent": None, "reasons": [], "confidence": ""},
+                })
+
     if selected_location:
         d["location"] = selected_location
-    if (case.get("video_description") and not aftermath_only(case["video_description"])
+    if (not case.get("summary_warning") and case.get("video_description") and not aftermath_only(case["video_description"])
             and not d.get("reconstruction") and not d.get("video_template")):
         crossing = d.get("relative_crossing")
         direction = None

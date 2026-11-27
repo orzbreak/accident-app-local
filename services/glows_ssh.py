@@ -19,11 +19,17 @@ def launch(instance, token, folder, log):
     password = credentials.get("password")
     if address.scheme != "ssh" or not host or not host.endswith(".glows.ai") or not address.port or not password:
         raise ValueError("Glows.ai 尚未提供可用的 SSH 連線。")
-    ssh, scp = shutil.which("ssh.exe"), shutil.which("scp.exe")
+    windows = os.name == "nt"
+    ssh = shutil.which("ssh.exe" if windows else "ssh")
+    scp = shutil.which("scp.exe" if windows else "scp")
     if not ssh or not scp:
-        raise ValueError("找不到 Windows OpenSSH。")
-    ask = folder / "ask.cmd"
-    ask.write_text('@powershell.exe -NoProfile -NonInteractive -Command "[Console]::WriteLine($env:GLOWS_SSH_PASSWORD)"\n', encoding="ascii")
+        raise ValueError("找不到 OpenSSH。")
+    ask = folder / ("ask.cmd" if windows else "ask")
+    if windows:
+        ask.write_text('@powershell.exe -NoProfile -NonInteractive -Command "[Console]::WriteLine($env:GLOWS_SSH_PASSWORD)"\n', encoding="ascii")
+    else:
+        ask.write_text('#!/bin/sh\nprintf "%s\\n" "$GLOWS_SSH_PASSWORD"\n', encoding="ascii")
+        ask.chmod(0o700)
     env = {
         **os.environ, "SSH_ASKPASS": str(ask), "SSH_ASKPASS_REQUIRE": "force",
         "GLOWS_SSH_PASSWORD": password,
@@ -36,11 +42,14 @@ def launch(instance, token, folder, log):
         "-o", "ConnectTimeout=12", "-o", "NumberOfPasswordPrompts=1",
     ]
     host = "root@" + host
-    subprocess.run([
-        scp, *options, "-P", str(address.port), str(WORKER / "app.py"),
-        str(WORKER / "requirements.txt"), str(worker_token), host + ":/root/",
-    ], env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
-        check=True, timeout=35)
+    try:
+        subprocess.run([
+            scp, *options, "-P", str(address.port), str(WORKER / "app.py"),
+            str(WORKER / "requirements.txt"), str(worker_token), host + ":/root/",
+        ], env=env, stdin=subprocess.DEVNULL, stdout=subprocess.DEVNULL, stderr=subprocess.DEVNULL,
+            check=True, timeout=35)
+    except (OSError, subprocess.SubprocessError) as exc:
+        raise ValueError(f"Glows.ai SSH 上傳 YOLO worker 失敗（{type(exc).__name__}）。") from exc
     command = (
         'cd /root; PY=/root/miniconda3/envs/workenv/bin/python; '
         'test -x "$PY" && "$PY" -m pip install -q -r requirements.txt && '
@@ -62,8 +71,14 @@ def infer(instance, source, worker_token, deadline, wait, request):
             tunnel = launch(instance, worker_token, Path(directory), log)
             try:
                 url = f"http://127.0.0.1:{PORT}/infer"
-                wait(url, worker_token, deadline, tunnel)
-                result = request(source, url, worker_token, deadline=deadline)
+                try:
+                    wait(url, worker_token, deadline, tunnel)
+                except ValueError as exc:
+                    raise ValueError(f"Glows.ai worker 啟動階段失敗：{exc}") from exc
+                try:
+                    result = request(source, url, worker_token, deadline=deadline)
+                except ValueError as exc:
+                    raise ValueError(f"Glows.ai worker 推論或下載階段失敗：{exc}") from exc
                 log.write(b"Annotated MP4 received by the local App.\n")
                 return result
             finally:
