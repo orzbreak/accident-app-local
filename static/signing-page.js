@@ -125,7 +125,9 @@ function initSigner() {
 }
 
 function initOwner() {
-  const revision = new URLSearchParams(location.search).get("revision");
+  const params = new URLSearchParams(location.search);
+  const revision = params.get("revision");
+  const caseId = params.get("case");
   const key = "signing.owner." + revision;
   if (secret && revision) sessionStorage.setItem(key, secret);
   const owner = sessionStorage.getItem(key);
@@ -135,6 +137,9 @@ function initOwner() {
     return;
   }
   const endpoint = "/api/signing/owner/" + revision;
+  const caseEndpoint = caseId && "/api/cases/" + encodeURIComponent(caseId);
+  const revisionQuery = "?revision=" + encodeURIComponent(revision);
+  let signedPdfUrl;
   const refresh = byId("refresh");
   const retry = byId("retry");
   const download = byId("download");
@@ -144,6 +149,18 @@ function initOwner() {
     dateStyle: "medium", timeStyle: "short", timeZone: "Asia/Taipei",
   });
   const update = async () => {
+    if (caseEndpoint) {
+      const record = await request(caseEndpoint + "/signing-status" + revisionQuery, owner);
+      const statuses = {
+        draft: "草稿尚未送出", waiting: "等待甲乙雙方完成簽署", completed: "已完成簽署",
+        declined: "簽署已拒絕", expired: "任務已逾期", voided: "任務已撤銷", deleted: "任務已刪除",
+      };
+      signedPdfUrl = record.signed_pdf_url;
+      byId("fingerprint").textContent = "DottedSign Sandbox · 任務 " + record.task_id + " · 版本 " + revision;
+      download.hidden = !signedPdfUrl;
+      message(statuses[record.status]);
+      return;
+    }
     const record = await request(endpoint, owner);
     byId("signers").replaceChildren(...record.signers.map(signer => {
       const item = document.createElement("li");
@@ -164,13 +181,13 @@ function initOwner() {
     if (result.delivery_failed.length) message(result.delivery_failed.map(roleName).join("、") + "邀請未能寄出。", true);
   });
   replay.onclick = handle(replay, async () => {
-    const data = await request(endpoint + "/replay", owner);
+    const data = await request(caseEndpoint ? caseEndpoint + "/signing-replay" + revisionQuery : endpoint + "/replay", owner);
     message("正在打包可離線開啟的 HTML…");
     await downloadReplayHtml(revision, data);
     message("已產生 HTML，可離線開啟。");
   });
   download.onclick = handle(download, async () => {
-    const blob = await request(endpoint + "/pdf", owner, {pdf: true});
+    const blob = await request(caseEndpoint ? signedPdfUrl : endpoint + "/pdf", owner, {pdf: true});
     const url = URL.createObjectURL(blob);
     const link = document.createElement("a");
     link.href = url;
@@ -179,6 +196,7 @@ function initOwner() {
     setTimeout(() => URL.revokeObjectURL(url), 1000);
     message("已取得雙方簽署的和解書。");
   });
+  if (caseEndpoint) replay.hidden = false;
   refresh.onclick();
 }
 

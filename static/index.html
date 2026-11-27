@@ -350,7 +350,7 @@ main:has(#p3.on) #restart{display:block;width:auto;padding:6px 12px}
 <label for="settlementAdditional">其他約定（選填）</label><textarea id="settlementAdditional" maxlength="1000"></textarea>
 </fieldset>
 <fieldset id="signRecipients"><legend>簽署收件人</legend>
-<p class="sub">App 會寄信給甲乙雙方，各自在自己的裝置上驗證信箱並簽名。</p>
+<p class="sub">甲乙雙方將各自收到簽署邀請。</p>
 <div class="g"><div><label for="emailA">甲方 Email</label><input id="emailA" type="email" maxlength="254" aria-describedby="recipientEmailError"></div>
 <div><label for="emailB">乙方 Email</label><input id="emailB" type="email" maxlength="254" aria-describedby="recipientEmailError"></div></div>
 <p id="recipientEmailError" role="status" hidden>甲乙雙方的 Email 不能相同，請輸入不同的信箱。</p></fieldset>
@@ -362,6 +362,8 @@ main:has(#p3.on) #restart{display:block;width:auto;padding:6px 12px}
 <p><button id="draftPreview" type="button" class="ghost" hidden>預覽送簽版 PDF</button></p>
 <div class="chk"><input type="checkbox" id="c1"><label for="c1" style="margin:0;color:var(--ink)">我已逐項核對以上內容，並了解 AI 初判僅供參考。</label></div>
 <div class="chk" id="c2box" hidden><input type="checkbox" id="c2"><label for="c2" style="margin:0;color:var(--ink)">有人受傷，我已報警或就醫，仍要繼續製作和解書。</label></div>
+<div class="chk"><input type="checkbox" id="useDottedsign" autocomplete="off"><label for="useDottedsign" style="margin:0;color:var(--ink)">使用 DottedSign Sandbox 送簽</label></div>
+<p class="sub" id="dottedsignNotice" hidden>請使用虛構案件和測試信箱。</p>
 <button id="mk" disabled>確認文件並寄出邀請</button>
 </div>
 
@@ -607,6 +609,8 @@ function manualReview() {
 function acceptAnalysis(result, edits, scenario) {
   if (C?.id!==result.id) $("emailA").value=$("emailB").value="";
   C=result;
+  $("useDottedsign").checked=false;
+  $("dottedsignNotice").hidden=true;
   rememberQuestions();
   enter3(edits, scenario);
   if (C.missing.length && !C.video_url) show(2);
@@ -736,7 +740,7 @@ function refreshReplay() {
     choices.dataset.case=C.id;
     $("sourceVideo").src=choices.value;
   }
-  $("videoErrors").textContent=(C.video_errors || []).join(" ");
+  $("videoErrors").textContent=[C.summary_warning, ...(C.video_errors || [])].filter(Boolean).join(" ");
   $("yoloResult").hidden=!(C.yolo_url || C.yolo_error);
   $("yoloError").hidden=!C.yolo_error;
   $("yoloError").textContent=C.yolo_error || "";
@@ -968,6 +972,9 @@ function gate(){const inj=$("injsel").value=="有";$("inj").style.display=inj?"b
   $("signRecipients").hidden=!signingEnabled;
   $("mk").hidden=!signingEnabled;
   $("c1").closest(".chk").hidden=!signingEnabled;
+  if (C?.dottedsign_only) $("useDottedsign").checked=true;
+  $("useDottedsign").closest(".chk").hidden=!signingEnabled || !!C?.dottedsign_only;
+  $("dottedsignNotice").hidden=!signingEnabled || !$("useDottedsign").checked;
   if (!signingEnabled) {
     $("c2box").hidden=true;
     if (ready) $("draftStatus").textContent="公開展示版可預覽 PDF，寄信與送簽暫停。";
@@ -987,9 +994,10 @@ function gate(){const inj=$("injsel").value=="有";$("inj").style.display=inj?"b
     else $(id).removeAttribute("aria-invalid");
   }
   if (ready && !sameEmail && (invalidA || invalidB)) $("draftStatus").textContent="請填寫甲乙雙方不同且有效的 Email，再確認送簽。";
-  if (!busy) $("mk").textContent="確認文件並寄出邀請";
+  if (!busy) $("mk").textContent=C?.dottedsign_only ? "確認文件並以 DottedSign 送簽" : "確認文件並寄出邀請";
   $("mk").disabled=busy || invalidA || invalidB || !(previewed&&$("c1").checked&&(!inj||$("c2").checked));
 }
+$("useDottedsign").onchange=()=>{$("dottedsignNotice").hidden=!$("useDottedsign").checked;};
 $("c1").onchange=()=>{approvedSnapshot=$("c1").checked ? approvalValues() : null; gate();};
 ["c2","injsel"].forEach(id=>$(id).onchange=gate);
 $("draftPreview").onclick=run($("draftPreview"),async()=>{
@@ -1026,16 +1034,22 @@ $("mk").onclick=run($("mk"),async()=>{
   }
   const snapshot=pdfValues();
   const [email_a,email_b]=signingEmails();
-  const r=await api("/api/cases/"+C.id+"/pdf","POST",{revision:C.revision,confirmed:$("c1").checked,injured_ack:$("c2").checked,email_a,email_b});
+  const r=await api("/api/cases/"+C.id+"/pdf","POST",{revision:C.revision,confirmed:$("c1").checked,injured_ack:$("c2").checked,email_a,email_b,use_dottedsign:$("useDottedsign").checked});
   C.agent_state="approved";
   pdfSnapshot=snapshot;
   const owner=caseCredentials.get(C.id);
-  $("ownerProgress").href="/signing-status.html?revision="+encodeURIComponent(C.revision)+"#"+owner;
-  const failed=r.delivery_failed.map(role=>role==="A" ? "甲方" : "乙方");
+  const progress = new URLSearchParams({revision: C.revision});
+  if (r.provider==="dottedsign") progress.set("case", C.id);
+  $("ownerProgress").href="/signing-status.html?"+progress+"#"+owner;
   $("ownerLinkStatus").textContent="";
-  $("dispatchStatus").textContent=failed.length
-    ? failed.join("、")+"邀請未能寄出。可在進度頁補寄。"
-    : "已寄出甲乙雙方簽署邀請。";
+  if (r.provider==="dottedsign") {
+    $("dispatchStatus").textContent="DottedSign Sandbox 已啟動簽署任務（編號 "+r.task_id+"）。";
+  } else {
+    const failed=r.delivery_failed.map(role=>role==="A" ? "甲方" : "乙方");
+    $("dispatchStatus").textContent=failed.length
+      ? failed.join("、")+"邀請未能寄出。可在進度頁補寄。"
+      : "已寄出甲乙雙方簽署邀請。";
+  }
   show(4);
 });
 $("copyOwnerLink").onclick=async()=>{
